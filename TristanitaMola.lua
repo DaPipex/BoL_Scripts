@@ -5,10 +5,10 @@ local version = 0.01
 
 	if myHero.charName ~= "Tristana" then return end
 if VIP_USER then
-	require "VPrediction"
 	VPredActive = true
 	else VPredActive = false
 end
+require "VPrediction"
 require "SOW"
 
 

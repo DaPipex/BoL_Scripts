@@ -1,7 +1,7 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = 0.01
+local version = 0.02
 
 if myHero.charName ~= "Tristana" then return end
 if VIP_USER then
@@ -70,10 +70,11 @@ function Menu()
     TristyMenu.combo:addParam("useR", "Use R in combo", SCRIPT_PARAM_ONOFF, false)
 
     TristyMenu:addSubMenu("Items", "items")
-    TristyMenu.items:addParam("itemsG", "Want to use items?", SCRIPT_PARAM_ONOFF, true)
+    TristyMenu.items:addParam("itemsG", "Want to use items in combo?", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useBOTRK", "Use Ruined king", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useBC", "Use Bilgewater Cutlass", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useDFG", "Use DeathFire Grasp", SCRIPT_PARAM_ONOFF, true)
+    TristyMenu.items:addParam("rangeToDFG", "Range to use DFG", SCRIPT_PARAM_SLICE, 500, 100, 750, 0)
 
     TristyMenu:addSubMenu("KS", "killsteal")
     TristyMenu.killsteal:addParam("ksW", "Killsteal with W", SCRIPT_PARAM_ONOFF, true)
@@ -90,6 +91,7 @@ function Menu()
     TristyMenu.draw:addParam("drawErange", "Draw E Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawRrange", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawAArange", "Draw AA Range", SCRIPT_PARAM_ONOFF, true)
+    TristyMenu.draw:addParam("drawDFGrange", "Draw DFG Range", SCRIPT_PARAM_ONOFF, false)
 
     ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, rangoW)
     ts.name = "Tristanita"
@@ -132,6 +134,10 @@ function OnDraw()
 
     if TristyMenu.draw.drawRrange then
         DrawCircle(myHero.x, myHero.y, myHero.z, rangoR, ARGB(255, 255, 255, 255))
+    end
+
+    if TristyMenu.draw.drawDFGrange then
+        DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.items.rangeToDFG, ARGB(255, 255, 255, 0))
     end
 end
 
@@ -260,7 +266,23 @@ end
 
 function UsarObjetos()
 
-if (TristyMenu.items.itemsG == false) or (Target == nil) then return end
+    if (TristyMenu.items.itemsG == false) or (Target == nil) then return end
 
-if TristyMenu.items.useBOTRK then
-    if 
+    if TristyMenu.items.useBOTRK and (GetDistance(Target) < 450) then
+        if BOTRKlisto then
+            CastItem(3153, Target)
+        end
+    end
+
+    if TristyMenu.items.useBC and (GetDistance(Target) < 450) then
+        if BClisto then
+            CastItem(3144, Target)
+        end
+    end
+
+    if TristyMenu.items.useDFG and (GetDistance(Target) < TristyMenu.items.rangeToDFG) then
+        if DFGlisto then
+            CastItem(3128, Target)
+        end
+    end
+end

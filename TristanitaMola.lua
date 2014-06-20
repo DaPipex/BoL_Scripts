@@ -1,7 +1,7 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = 0.02
+local version = 0.03
 
 if myHero.charName ~= "Tristana" then return end
 if VIP_USER then
@@ -18,12 +18,13 @@ function OnLoad()
     Variables()
     Menu()
     DelayAction(CargarPredicciones, 3)
+    InterrumpirMenu()
 
 end
 
 function Variables()
 
-    rangoW, rangoE, rangoR = 900, 650, 700
+    rangoW, rangoE, rangoR = 900, 600, 600
     Qlista, Wlista, Elista, Rlista = false, false, false, false
     anchoW, velocidadW, demoraW = 270, 20, .5
     VP = nil
@@ -33,13 +34,40 @@ function Variables()
     SOWi = nil
     EspadaDelChoro, CurvedPenis, GarraIgnea = nil, nil, nil
     BOTRKlisto, BClisto, DFGlisto = nil, nil, nil
+    InterrumpirJuego = {}
+    InterrumpirCompleto = {
+        { nombre = "Caitlyn", hechizo = "CaitlynAceintheHole"},
+        { nombre = "FiddleSticks", hechizo = "Crowstorm"},
+        { nombre = "FiddleSticks", hechizo = "DrainChannel"},
+        { nombre = "Galio", hechizo = "GalioIdolOfDurand"},
+        { nombre = "Karthus", hechizo = "FallenOne"},
+        { nombre = "Katarina", hechizo = "KatarinaR"},
+        { nombre = "Lucian", hechizo = "LucianR"},
+        { nombre = "Malzahar", hechizo = "AlZaharNetherGrasp"},
+        { nombre = "MissFortune", hechizo = "MissFortuneBulletTime"},
+        { nombre = "Nunu", hechizo = "AbsoluteZero"},
+        { nombre = "Pantheon", hechizo = "Pantheon_GrandSkyfall_Jump"},
+        { nombre = "Shen", hechizo = "ShenStandUnited"},
+        { nombre = "Urgot", hechizo = "UrgotSwap2"},
+        { nombre = "Varus", hechizo = "VarusQ"},
+        { nombre = "Warwick", hechizo = "InfiniteDuress"}
+    }
+
+    local EquipoEnemigo = GetEnemyHeroes()
+    for i, enemigo in pairs(EquipoEnemigo) do
+        for j, campeon in pairs(InterrumpirCompleto) do
+            if enemigo.charName == campeon.nombre then
+                table.insert(InterrumpirJuego, campeon.hechizo)
+            end
+        end
+    end
+
 
     if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
         castigo = SUMMONER_1
     elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
         castigo = SUMMONER_2
     end
-
 end
 
 function CargarPredicciones()
@@ -70,6 +98,9 @@ function Menu()
     TristyMenu.combo:addParam("useW", "Use W in combo", SCRIPT_PARAM_ONOFF, false)
     TristyMenu.combo:addParam("useE", "Use E...", SCRIPT_PARAM_LIST, 2, { "Never", "ASAP" })
     TristyMenu.combo:addParam("useR", "Use R in combo", SCRIPT_PARAM_ONOFF, false)
+
+    TristyMenu:addSubMenu("Interrupt", "inter")
+    TristyMenu.inter:addParam("interG", "Interrupt?", SCRIPT_PARAM_ONOFF, true)
 
     TristyMenu:addSubMenu("Items", "items")
     TristyMenu.items:addParam("itemsG", "Want to use items in combo?", SCRIPT_PARAM_ONOFF, true)
@@ -195,7 +226,8 @@ end
 
 function ActualizarRangos()
 
-    rangoE = 650 + 9 * (myHero.level - 1)
+    rangoE = 600 + 9 * (myHero.level - 1)
+    rangoR = 600 + 9 * (myHero.level - 1)
 
 end
 
@@ -284,6 +316,29 @@ function UsarObjetos()
     if TristyMenu.items.useDFG and (GetDistance(Target) < TristyMenu.items.rangeToDFG) then
         if DFGlisto then
             CastSpell(GarraIgnea, Target)
+        end
+    end
+end
+
+function InterrumpirMenu()
+    if #InterrumpirJuego > 0 then
+        for i, hechizoInter in pairs(InterrumpirJuego) do
+            TristyMenu.inter:addParam(hechizoInter, hechizoInter, SCRIPT_PARAM_ONOFF, true)
+        end
+    else
+        TristyMenu.inter:addParam("info2", "No supported spells found", SCRIPT_PARAM_INFO, "")
+    end
+end
+
+function OnProcessSpell(unit, spell)
+
+    if #InterrumpirJuego > 0 and TristyMenu.inter.interG and Rlista then
+        for i, habilidad in pairs(InterrumpirJuego) do
+            if spell.name == habilidad and (unit.team ~= myHero.team) and TristyMenu.inter[habilidad] then
+                if GetDistance(unit) < rangoR then
+                    CastSpell(_R, unit)
+                end
+            end
         end
     end
 end

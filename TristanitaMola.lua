@@ -1,7 +1,7 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = 0.03
+local version = 0.04
 
 if myHero.charName ~= "Tristana" then return end
 if VIP_USER then
@@ -15,9 +15,11 @@ require "SOW"
 
 function OnLoad()
 
+    loadDone = false
+
     Variables()
     Menu()
-    DelayAction(CargarPredicciones, 3)
+    DelayAction(CargarPredicciones, 2)
     InterrumpirMenu()
 
 end
@@ -34,6 +36,8 @@ function Variables()
     SOWi = nil
     EspadaDelChoro, CurvedPenis, GarraIgnea = nil, nil, nil
     BOTRKlisto, BClisto, DFGlisto = nil, nil, nil
+    TextosMatar = {}
+    ListaTextos = { "Harass", "W", "E", "R", "W+E", "W+R", "E+R", "Ignite", "On cooldown" }
     InterrumpirJuego = {}
     InterrumpirCompleto = {
         { nombre = "Caitlyn", hechizo = "CaitlynAceintheHole"},
@@ -50,6 +54,7 @@ function Variables()
         { nombre = "Shen", hechizo = "ShenStandUnited"},
         { nombre = "Urgot", hechizo = "UrgotSwap2"},
         { nombre = "Varus", hechizo = "VarusQ"},
+        { nombre = "Velkoz", hechizo = "VelkozR"},
         { nombre = "Warwick", hechizo = "InfiniteDuress"}
     }
 
@@ -82,6 +87,8 @@ function CargarPredicciones()
 
     SOWi = SOW(VP)
     SOWi:LoadToMenu(TristyMenu.orbw)
+
+    loadDone = true
 
 end
 
@@ -116,6 +123,7 @@ function Menu()
 
     TristyMenu:addSubMenu("Keys", "keys")
     TristyMenu.keys:addParam("ComboKey", "SBTW Key (Space)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+    TristyMenu.keys:addParam("HarassKey", "Harass with E (C)", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
     TristyMenu.keys:addParam("info1", "Request more keys!", SCRIPT_PARAM_INFO, "")
 
     TristyMenu:addSubMenu("Drawing", "draw")
@@ -125,6 +133,7 @@ function Menu()
     TristyMenu.draw:addParam("drawRrange", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawAArange", "Draw AA Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawDFGrange", "Draw DFG Range", SCRIPT_PARAM_ONOFF, false)
+    TristyMenu.draw:addParam("drawKtext", "Draw Kill text", SCRIPT_PARAM_ONOFF, true)
 
     ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, rangoW)
     ts.name = "Tristanita"
@@ -135,42 +144,58 @@ end
 
 function OnTick()
 
-    Chequeos()
-    ActualizarRangos()
-    Killsteal()
-    if TristyMenu.keys.ComboKey then
-        Combo()
-        UsarObjetos()
+    if loadDone then
+        Chequeos()
+        ActualizarRangos()
+        Killsteal()
+        CalculoDeDano()
+        if TristyMenu.keys.ComboKey then
+            Combo()
+            UsarObjetos()
+        end
+        if TristyMenu.keys.HarassKey then
+            Harass()
+        end
     end
-
 end
 
 function OnDraw()
 
-    if myHero.dead then return end
+    if loadDone then
+        if myHero.dead then return end
 
-    if TristyMenu.draw.drawAArange then
-        SOWi:DrawAARange()
-    end
+        if TristyMenu.draw.drawAArange then
+            SOWi:DrawAARange()
+        end
 
-    if TristyMenu.draw.drawQrange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.combo.rangeToQ, ARGB(255, 255, 0, 0))
-    end
+        if TristyMenu.draw.drawQrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.combo.rangeToQ, ARGB(255, 255, 0, 0))
+        end
 
-    if TristyMenu.draw.drawWrange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, rangoW, ARGB(255, 0, 255, 0))
-    end
+        if TristyMenu.draw.drawWrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, rangoW, ARGB(255, 0, 255, 0))
+        end
 
-    if TristyMenu.draw.drawErange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, rangoE, ARGB(255, 0, 0, 255))
-    end
+        if TristyMenu.draw.drawErange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, rangoE, ARGB(255, 0, 0, 255))
+        end
 
-    if TristyMenu.draw.drawRrange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, rangoR, ARGB(255, 255, 255, 255))
-    end
+        if TristyMenu.draw.drawRrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, rangoR, ARGB(255, 255, 255, 255))
+        end
 
-    if TristyMenu.draw.drawDFGrange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.items.rangeToDFG, ARGB(255, 255, 255, 0))
+        if TristyMenu.draw.drawDFGrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.items.rangeToDFG, ARGB(255, 255, 255, 0))
+        end
+
+        if TristyMenu.draw.drawKtext then
+            for i=1, heroManager.iCount do
+                local objetivo = heroManager:GetHero(i)
+                if ValidTarget(objetivo, 900) and objetivo ~= nil then
+                    PrintFloatText(objetivo, 0, ListaTextos[TextosMatar[i]])
+                end
+            end
+        end
     end
 end
 
@@ -220,6 +245,15 @@ function Combo()
     if TristyMenu.combo.useR then
         if Rlista and (GetDistance(Target) < rangoR) then
             CastSpell(_R, Target)
+        end
+    end
+end
+
+function Harass()
+
+    if Target ~= nil then
+        if (GetDistance(Target) < rangoE) then
+            CastSpell(_E, Target)
         end
     end
 end
@@ -337,6 +371,70 @@ function OnProcessSpell(unit, spell)
             if spell.name == habilidad and (unit.team ~= myHero.team) and TristyMenu.inter[habilidad] then
                 if GetDistance(unit) < rangoR then
                     CastSpell(_R, unit)
+                end
+            end
+        end
+    end
+end
+
+function CalculoDeDano()
+
+    for i=1, heroManager.iCount do
+        local objetivo = heroManager:GetHero(i)
+        if ValidTarget(objetivo, 900) and objetivo ~= nil then
+            dfgDMG, bcDMG, botrkDMG = 0, 0, 0
+            wDMG = ((Wlista and getDmg("W", objetivo, myHero)) or 0)
+            eDMG = ((Elista and getDmg("E", objetivo, myHero, 3)) or 0)
+            rDMG = ((Rlista and getDmg("R", objetivo, myHero)) or 0)
+            dfgDMG = ((DFGlisto and getDmg("DFG", objetivo, myHero)) or 0)
+            bcDMG = ((BClisto and getDmg("BWC", objetivo, myHero)) or 0)
+            botrkDMG = ((BOTRKlisto and getDmg("RUINEDKING", objetivo, myHero)) or 0)
+            iDMG = ((Ilista and getDmg("IGNITE", objetivo, myHero)) or 0)
+            itemsDMG = dfgDMG + bcDMG + botrkDMG
+
+            if objetivo.health > (wDMG + eDMG + rDMG + itemsDMG) and itemsDMG ~= 0 then
+                TextosMatar[i] = 1
+            elseif objetivo.health < wDMG then
+                if Wlista then
+                    TextosMatar[i] = 2
+                else
+                    TextosMatar[i] = 9
+                end
+            elseif objetivo.health < (wDMG + eDMG) then
+                if (Wlista and Elista) then
+                    TextosMatar[i] = 5
+                else
+                    TextosMatar[i] = 9
+                end
+            elseif objetivo.health < (wDMG + rDMG) then
+                if (Wlista and Rlista) then
+                    TextosMatar[i] = 6
+                else
+                    TextosMatar[i] = 9
+                end
+            elseif objetivo.health < eDMG then
+                if Elista then
+                    TextosMatar[i] = 3
+                else
+                    TextosMatar[i] = 9
+                end
+            elseif objetivo.health < rDMG then
+                if Rlista then
+                    TextosMatar[i] = 4
+                else
+                    TextosMatar[i] = 9
+                end
+            elseif objetivo.health < (eDMG + rDMG) then
+                if (Elista and Rlista) then
+                    TextosMatar[i] = 7
+                else
+                    TextosMatar[i] = 9
+                end
+            elseif objetivo.health < iDMG then
+                if Ilista then
+                    TextosMatar[i] = 8
+                else
+                    TextosMatar[i] = 9
                 end
             end
         end

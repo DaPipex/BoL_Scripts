@@ -1,7 +1,7 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = 0.04
+local version = 0.05
 
 if myHero.charName ~= "Tristana" then return end
 if VIP_USER then
@@ -21,6 +21,7 @@ function OnLoad()
     Menu()
     DelayAction(CargarPredicciones, 2)
     InterrumpirMenu()
+    GapCloserMenu()
 
 end
 
@@ -34,28 +35,46 @@ function Variables()
     castigo = nil
     ts = nil
     SOWi = nil
+
     EspadaDelChoro, CurvedPenis, GarraIgnea = nil, nil, nil
     BOTRKlisto, BClisto, DFGlisto = nil, nil, nil
+    AcercadoresJuego = {}
+    Acercadores = {
+        { nombre = "Akali"     , hechizo = "AkaliShadowDance"    },
+        { nombre = "Alistar"   , hechizo = "Headbutt"            },
+        { nombre = "Diana"     , hechizo = "DianaTeleport"       },
+        { nombre = "Irelia"    , hechizo = "IreliaGatotsu"       },
+        { nombre = "Jax"       , hechizo = "JaxLeapStrike"       },
+        { nombre = "Jayce"     , hechizo = "JayceToTheSkies"     },
+        { nombre = "Maokai"    , hechizo = "MaokaiUnstableGrowth"},
+        { nombre = "MonkeyKing", hechizo = "MonkeyKingNimbus"    },
+        { nombre = "Pantheon"  , hechizo = "Pantheon_LeapBash"   },
+        { nombre = "Poppy"     , hechizo = "PoppyHeroicCharge"   },
+        { nombre = "Quinn"     , hechizo = "QuinnE"              },
+        { nombre = "XinZhao"   , hechizo = "XenZhaoSweep"        },
+        { nombre = "LeeSin"    , hechizo = "blindmonkqtwo"       }
+    }
     TextosMatar = {}
-    ListaTextos = { "Harass", "W", "E", "R", "W+E", "W+R", "E+R", "Ignite", "On cooldown" }
+    ListaTextos = { "W+E+R", "E+R", "W+R", "W+E", "R", "E", "W", "Items", "Harass" }
+    TextosEsperar = {}
     InterrumpirJuego = {}
     InterrumpirCompleto = {
-        { nombre = "Caitlyn", hechizo = "CaitlynAceintheHole"},
+        { nombre = "Caitlyn"     , hechizo = "CaitlynAceintheHole"},
         { nombre = "FiddleSticks", hechizo = "Crowstorm"},
         { nombre = "FiddleSticks", hechizo = "DrainChannel"},
-        { nombre = "Galio", hechizo = "GalioIdolOfDurand"},
-        { nombre = "Karthus", hechizo = "FallenOne"},
-        { nombre = "Katarina", hechizo = "KatarinaR"},
-        { nombre = "Lucian", hechizo = "LucianR"},
-        { nombre = "Malzahar", hechizo = "AlZaharNetherGrasp"},
-        { nombre = "MissFortune", hechizo = "MissFortuneBulletTime"},
-        { nombre = "Nunu", hechizo = "AbsoluteZero"},
-        { nombre = "Pantheon", hechizo = "Pantheon_GrandSkyfall_Jump"},
-        { nombre = "Shen", hechizo = "ShenStandUnited"},
-        { nombre = "Urgot", hechizo = "UrgotSwap2"},
-        { nombre = "Varus", hechizo = "VarusQ"},
-        { nombre = "Velkoz", hechizo = "VelkozR"},
-        { nombre = "Warwick", hechizo = "InfiniteDuress"}
+        { nombre = "Galio"       , hechizo = "GalioIdolOfDurand"},
+        { nombre = "Karthus"     , hechizo = "FallenOne"},
+        { nombre = "Katarina"    , hechizo = "KatarinaR"},
+        { nombre = "Lucian"      , hechizo = "LucianR"},
+        { nombre = "Malzahar"    , hechizo = "AlZaharNetherGrasp"},
+        { nombre = "MissFortune" , hechizo = "MissFortuneBulletTime"},
+        { nombre = "Nunu"        , hechizo = "AbsoluteZero"},
+        { nombre = "Pantheon"    , hechizo = "Pantheon_GrandSkyfall_Jump"},
+        { nombre = "Shen"        , hechizo = "ShenStandUnited"},
+        { nombre = "Urgot"       , hechizo = "UrgotSwap2"},
+        { nombre = "Varus"       , hechizo = "VarusQ"},
+        { nombre = "Velkoz"      , hechizo = "VelkozR"},
+        { nombre = "Warwick"     , hechizo = "InfiniteDuress"}
     }
 
     local EquipoEnemigo = GetEnemyHeroes()
@@ -65,13 +84,21 @@ function Variables()
                 table.insert(InterrumpirJuego, campeon.hechizo)
             end
         end
+        for h, gapcloserunit in pairs(Acercadores) do
+            if enemigo.charName == gapcloserunit.nombre then
+                table.insert(AcercadoresJuego, gapcloserunit.hechizo)
+            end
+        end
     end
-
 
     if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
         castigo = SUMMONER_1
     elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
         castigo = SUMMONER_2
+    end
+
+    for k=1, heroManager.iCount do
+        TextosEsperar[k] = k * 3
     end
 end
 
@@ -79,10 +106,10 @@ function CargarPredicciones()
 
     if VPredActive == true then
         VP = VPrediction()
-        PrintChat("Pos que Tristanita Mola: "..version.." VPrediction version Loaded!")
+        PrintChat("<font color='#FF9A00'>Pos que Tristanita Mola: "..version.." VPrediction version Loaded!</font>")
     else
         freePredW = TargetPrediction(rangoW, velocidadW, demoraW, anchoW)
-        PrintChat("Pos que Tristanita Mola: "..version.." Free prediction version Loaded!")
+        PrintChat("<font color='#FF9A00'>Pos que Tristanita Mola: "..version.." Free prediction version Loaded!</font>")
     end
 
     SOWi = SOW(VP)
@@ -108,6 +135,8 @@ function Menu()
 
     TristyMenu:addSubMenu("Interrupt", "inter")
     TristyMenu.inter:addParam("interG", "Interrupt?", SCRIPT_PARAM_ONOFF, true)
+
+    TristyMenu:addSubMenu("Anti Gap Closer", "agc")
 
     TristyMenu:addSubMenu("Items", "items")
     TristyMenu.items:addParam("itemsG", "Want to use items in combo?", SCRIPT_PARAM_ONOFF, true)
@@ -156,6 +185,7 @@ function OnTick()
         if TristyMenu.keys.HarassKey then
             Harass()
         end
+        SOWi:ForceTarget(Target)
     end
 end
 
@@ -191,8 +221,15 @@ function OnDraw()
         if TristyMenu.draw.drawKtext then
             for i=1, heroManager.iCount do
                 local objetivo = heroManager:GetHero(i)
-                if ValidTarget(objetivo, 900) and objetivo ~= nil then
+                if ValidTarget(objetivo, 3500) and objetivo ~= nil and TextosEsperar[i] == 1 then
                     PrintFloatText(objetivo, 0, ListaTextos[TextosMatar[i]])
+                end
+                if ValidTarget(objetivo, 2000) then
+                    if TextosEsperar[i] == 1 then
+                        TextosEsperar[i] = 30
+                    else
+                        TextosEsperar[i] = TextosEsperar[i] - 1
+                    end
                 end
             end
         end
@@ -375,13 +412,23 @@ function OnProcessSpell(unit, spell)
             end
         end
     end
+
+    if #AcercadoresJuego > 0 and Rlista then
+        for i, habilidadGC in pairs(AcercadoresJuego) do
+            if spell.name == habilidadGC and (unit.team ~= myHero.team) and TristyMenu.agc[habilidadGC] then
+                if GetDistance(spell.endPos) <= 50 then
+                    CastSpell(_R, unit)
+                end 
+            end
+        end
+    end
 end
 
 function CalculoDeDano()
 
     for i=1, heroManager.iCount do
         local objetivo = heroManager:GetHero(i)
-        if ValidTarget(objetivo, 900) and objetivo ~= nil then
+        if ValidTarget(objetivo, 3500) and objetivo ~= nil then
             dfgDMG, bcDMG, botrkDMG = 0, 0, 0
             wDMG = ((Wlista and getDmg("W", objetivo, myHero)) or 0)
             eDMG = ((Elista and getDmg("E", objetivo, myHero, 3)) or 0)
@@ -392,51 +439,36 @@ function CalculoDeDano()
             iDMG = ((Ilista and getDmg("IGNITE", objetivo, myHero)) or 0)
             itemsDMG = dfgDMG + bcDMG + botrkDMG
 
-            if objetivo.health > (wDMG + eDMG + rDMG + itemsDMG) and itemsDMG ~= 0 then
+            if (wDMG + eDMG + rDMG < objetivo.health) then
+                TextosMatar[i] = 9
+            elseif itemsDMG >= objetivo.health then
+                TextosMatar[i] = 8
+            elseif Wlista and (wDMG >= objetivo.health) then
+                TextosMatar[i] = 7
+            elseif Elista and (eDMG >= objetivo.health) then
+                TextosMatar[i] = 6
+            elseif Rlista and (rDMG >= objetivo.health) then
+                TextosMatar[i] = 5
+            elseif Wlista and Elista and (wDMG + eDMG >= objetivo.health) then
+                TextosMatar[i] = 4
+            elseif Wlista and Rlista and (wDMG + rDMG >= objetivo.health) then
+                TextosMatar[i] = 3
+            elseif Elista and Rlista and (eDMG + rDMG >= objetivo.health) then
+                TextosMatar[i] = 2
+            elseif Wlista and Elista and Rlista and (wDMG and eDMG and rDMG >= objetivo.health) then
                 TextosMatar[i] = 1
-            elseif objetivo.health < wDMG then
-                if Wlista then
-                    TextosMatar[i] = 2
-                else
-                    TextosMatar[i] = 9
-                end
-            elseif objetivo.health < (wDMG + eDMG) then
-                if (Wlista and Elista) then
-                    TextosMatar[i] = 5
-                else
-                    TextosMatar[i] = 9
-                end
-            elseif objetivo.health < (wDMG + rDMG) then
-                if (Wlista and Rlista) then
-                    TextosMatar[i] = 6
-                else
-                    TextosMatar[i] = 9
-                end
-            elseif objetivo.health < eDMG then
-                if Elista then
-                    TextosMatar[i] = 3
-                else
-                    TextosMatar[i] = 9
-                end
-            elseif objetivo.health < rDMG then
-                if Rlista then
-                    TextosMatar[i] = 4
-                else
-                    TextosMatar[i] = 9
-                end
-            elseif objetivo.health < (eDMG + rDMG) then
-                if (Elista and Rlista) then
-                    TextosMatar[i] = 7
-                else
-                    TextosMatar[i] = 9
-                end
-            elseif objetivo.health < iDMG then
-                if Ilista then
-                    TextosMatar[i] = 8
-                else
-                    TextosMatar[i] = 9
-                end
             end
         end
+    end
+end
+
+function GapCloserMenu()
+
+    if #AcercadoresJuego > 0 then
+        for i, hechizoGC in pairs(AcercadoresJuego) do
+            TristyMenu.agc:addParam(hechizoGC, hechizoGC, SCRIPT_PARAM_ONOFF, false)
+        end
+    else
+        TristyMenu.agc:addParam("info3", "No supported spells found", SCRIPT_PARAM_INFO, "")
     end
 end

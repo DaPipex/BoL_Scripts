@@ -105,13 +105,13 @@ end
 function CargarPredicciones()
 
     if VPredActive == true then
-        VP = VPrediction()
         PrintChat("<font color='#FF9A00'>Pos que Tristanita Mola: "..version.." VPrediction version Loaded!</font>")
     else
         freePredW = TargetPrediction(rangoW, velocidadW, demoraW, anchoW)
         PrintChat("<font color='#FF9A00'>Pos que Tristanita Mola: "..version.." Free prediction version Loaded!</font>")
     end
-
+    
+    VP = VPrediction()
     SOWi = SOW(VP)
     SOWi:LoadToMenu(TristyMenu.orbw)
 

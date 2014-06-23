@@ -1,7 +1,7 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = 0.02
+local version = 0.04
 
 if myHero.charName ~= "Tristana" then return end
 if VIP_USER then
@@ -15,15 +15,19 @@ require "SOW"
 
 function OnLoad()
 
+    loadDone = false
+
     Variables()
     Menu()
-    DelayAction(CargarPredicciones, 3)
+    DelayAction(CargarPredicciones, 2)
+    InterrumpirMenu()
+    GapCloserMenu()
 
 end
 
 function Variables()
 
-    rangoW, rangoE, rangoR = 900, 650, 700
+    rangoW, rangoE, rangoR = 900, 600, 600
     Qlista, Wlista, Elista, Rlista = false, false, false, false
     anchoW, velocidadW, demoraW = 270, 20, .5
     VP = nil
@@ -31,13 +35,70 @@ function Variables()
     castigo = nil
     ts = nil
     SOWi = nil
+    EspadaDelChoro, CurvedPenis, GarraIgnea = nil, nil, nil
+    BOTRKlisto, BClisto, DFGlisto = nil, nil, nil
+    AcercadoresJuego = {}
+    Acercadores = {
+        { nombre = "Akali"     , hechizo = "AkaliShadowDance"    },
+        { nombre = "Alistar"   , hechizo = "Headbutt"            },
+        { nombre = "Diana"     , hechizo = "DianaTeleport"       },
+        { nombre = "Irelia"    , hechizo = "IreliaGatotsu"       },
+        { nombre = "Jax"       , hechizo = "JaxLeapStrike"       },
+        { nombre = "Jayce"     , hechizo = "JayceToTheSkies"     },
+        { nombre = "Maokai"    , hechizo = "MaokaiUnstableGrowth"},
+        { nombre = "MonkeyKing", hechizo = "MonkeyKingNimbus"    },
+        { nombre = "Pantheon"  , hechizo = "Pantheon_LeapBash"   },
+        { nombre = "Poppy"     , hechizo = "PoppyHeroicCharge"   },
+        { nombre = "Quinn"     , hechizo = "QuinnE"              },
+        { nombre = "XinZhao"   , hechizo = "XenZhaoSweep"        },
+        { nombre = "LeeSin"    , hechizo = "blindmonkqtwo"       }
+    }
+    TextosMatar = {}
+    ListaTextos = { "W+E+R", "E+R", "W+R", "W+E", "R", "E", "W", "Items", "Harass" }
+    TextosEsperar = {}
+    InterrumpirJuego = {}
+    InterrumpirCompleto = {
+        { nombre = "Caitlyn", hechizo = "CaitlynAceintheHole"},
+        { nombre = "FiddleSticks", hechizo = "Crowstorm"},
+        { nombre = "FiddleSticks", hechizo = "DrainChannel"},
+        { nombre = "Galio", hechizo = "GalioIdolOfDurand"},
+        { nombre = "Karthus", hechizo = "FallenOne"},
+        { nombre = "Katarina", hechizo = "KatarinaR"},
+        { nombre = "Lucian", hechizo = "LucianR"},
+        { nombre = "Malzahar", hechizo = "AlZaharNetherGrasp"},
+        { nombre = "MissFortune", hechizo = "MissFortuneBulletTime"},
+        { nombre = "Nunu", hechizo = "AbsoluteZero"},
+        { nombre = "Pantheon", hechizo = "Pantheon_GrandSkyfall_Jump"},
+        { nombre = "Shen", hechizo = "ShenStandUnited"},
+        { nombre = "Urgot", hechizo = "UrgotSwap2"},
+        { nombre = "Varus", hechizo = "VarusQ"},
+        { nombre = "Velkoz", hechizo = "VelkozR"},
+        { nombre = "Warwick", hechizo = "InfiniteDuress"}
+    }
 
-    if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
-        castigo = SUMMONER_1
-    elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
-        castigo = SUMMONER_2
+    local EquipoEnemigo = GetEnemyHeroes()
+    for i, enemigo in pairs(EquipoEnemigo) do
+        for j, campeon in pairs(InterrumpirCompleto) do
+            if enemigo.charName == campeon.nombre then
+                table.insert(InterrumpirJuego, campeon.hechizo)
+            end
+        end
+        for h, gapcloserunit in pairs(Acercadores) do
+            if enemigo.charName == gapcloserunit.nombre then
+                table.insert(AcercadoresJuego, gapcloserunit.hechizo)
+            end
+        end
+
+        if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
+            castigo = SUMMONER_1
+        elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
+            castigo = SUMMONER_2
+        end
+
+        for k=1, heroManager.iCount do
+            TextosEsperar[k] = k * 3
+        end
     end
-
 end
 
 function CargarPredicciones()
@@ -52,6 +113,8 @@ function CargarPredicciones()
 
     SOWi = SOW(VP)
     SOWi:LoadToMenu(TristyMenu.orbw)
+
+    loadDone = true
 
 end
 
@@ -69,6 +132,11 @@ function Menu()
     TristyMenu.combo:addParam("useE", "Use E...", SCRIPT_PARAM_LIST, 2, { "Never", "ASAP" })
     TristyMenu.combo:addParam("useR", "Use R in combo", SCRIPT_PARAM_ONOFF, false)
 
+    TristyMenu:addSubMenu("Interrupt", "inter")
+    TristyMenu.inter:addParam("interG", "Interrupt?", SCRIPT_PARAM_ONOFF, true)
+
+    TristyMenu:addSubMenu("Anti Gap Closer", "agc")
+
     TristyMenu:addSubMenu("Items", "items")
     TristyMenu.items:addParam("itemsG", "Want to use items in combo?", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useBOTRK", "Use Ruined king", SCRIPT_PARAM_ONOFF, true)
@@ -83,6 +151,7 @@ function Menu()
 
     TristyMenu:addSubMenu("Keys", "keys")
     TristyMenu.keys:addParam("ComboKey", "SBTW Key (Space)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+    TristyMenu.keys:addParam("HarassKey", "Harass with E (C)", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
     TristyMenu.keys:addParam("info1", "Request more keys!", SCRIPT_PARAM_INFO, "")
 
     TristyMenu:addSubMenu("Drawing", "draw")
@@ -92,6 +161,7 @@ function Menu()
     TristyMenu.draw:addParam("drawRrange", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawAArange", "Draw AA Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawDFGrange", "Draw DFG Range", SCRIPT_PARAM_ONOFF, false)
+    TristyMenu.draw:addParam("drawKtext", "Draw Kill text", SCRIPT_PARAM_ONOFF, true)
 
     ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, rangoW)
     ts.name = "Tristanita"
@@ -102,42 +172,65 @@ end
 
 function OnTick()
 
-    Chequeos()
-    ActualizarRangos()
-    Killsteal()
-    if TristyMenu.keys.ComboKey then
-        Combo()
-        UsarObjetos()
+    if loadDone then
+        Chequeos()
+        ActualizarRangos()
+        Killsteal()
+        CalculoDeDano()
+        if TristyMenu.keys.ComboKey then
+            Combo()
+            UsarObjetos()
+        end
+        if TristyMenu.keys.HarassKey then
+            Harass()
+        end
     end
-
 end
 
 function OnDraw()
 
-    if myHero.dead then return end
+    if loadDone then
+        if myHero.dead then return end
 
-    if TristyMenu.draw.drawAArange then
-        SOWi:DrawAARange()
-    end
+        if TristyMenu.draw.drawAArange then
+            SOWi:DrawAARange()
+        end
 
-    if TristyMenu.draw.drawQrange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.combo.rangeToQ, ARGB(255, 255, 0, 0))
-    end
+        if TristyMenu.draw.drawQrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.combo.rangeToQ, ARGB(255, 255, 0, 0))
+        end
 
-    if TristyMenu.draw.drawWrange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, rangoW, ARGB(255, 0, 255, 0))
-    end
+        if TristyMenu.draw.drawWrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, rangoW, ARGB(255, 0, 255, 0))
+        end
 
-    if TristyMenu.draw.drawErange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, rangoE, ARGB(255, 0, 0, 255))
-    end
+        if TristyMenu.draw.drawErange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, rangoE, ARGB(255, 0, 0, 255))
+        end
 
-    if TristyMenu.draw.drawRrange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, rangoR, ARGB(255, 255, 255, 255))
-    end
+        if TristyMenu.draw.drawRrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, rangoR, ARGB(255, 255, 255, 255))
+        end
 
-    if TristyMenu.draw.drawDFGrange then
-        DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.items.rangeToDFG, ARGB(255, 255, 255, 0))
+        if TristyMenu.draw.drawDFGrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.items.rangeToDFG, ARGB(255, 255, 255, 0))
+        end
+
+        if TristyMenu.draw.drawKtext then
+            for i=1, heroManager.iCount do
+                local objetivo = heroManager:GetHero(i)
+                if ValidTarget(objetivo, 3500) and objetivo ~= nil and TextosEsperar[i] == 1 then
+                    PrintFloatText(objetivo, 0, ListaTextos[TextosMatar[i]])
+                end
+                if ValidTarget(objetivo, 2000) then
+                    if TextosEsperar[i] == 1 then
+                        TextosEsperar[i] = 30
+                    else
+                        TextosEsperar[i] = TextosEsperar[i] - 1
+                    end
+                end
+            end
+        end
     end
 end
 
@@ -150,13 +243,12 @@ function Chequeos()
     Ilista = (castigo ~= nil and myHero:CanUseSpell(castigo) == READY)
 
     EspadaDelChoro = GetInventorySlotItem(3153)
-    BOTRKlisto = (EspadaDelChoro ~= nil and myHero:CanUseSpell(EspadaDelChoro) == READY)
-
     CurvedPenis = GetInventorySlotItem(3144)
-    BClisto = (CurvedPenis ~= nil and myHero:CanUseSpell(CurvedPenis) == READY)
-
     GarraIgnea = GetInventorySlotItem(3128)
-    DFGlisto = (CurvedPenis ~= nil and myHero:CanUseSpell(GarraIgnea) == READY)
+
+    BOTRKlisto = (EspadaDelChoro ~= nil and myHero:CanUseSpell(EspadaDelChoro) == READY)
+    BClisto = (CurvedPenis ~= nil and myHero:CanUseSpell(CurvedPenis) == READY)
+    DFGlisto = (GarraIgnea ~= nil and myHero:CanUseSpell(GarraIgnea) == READY)
 
     ts:update()
     Target = ts.target
@@ -192,9 +284,19 @@ function Combo()
     end
 end
 
+function Harass()
+
+    if Target ~= nil then
+        if (GetDistance(Target) < rangoE) then
+            CastSpell(_E, Target)
+        end
+    end
+end
+
 function ActualizarRangos()
 
-    rangoE = 650 + 9 * (myHero.level - 1)
+    rangoE = 600 + 9 * (myHero.level - 1)
+    rangoR = 600 + 9 * (myHero.level - 1)
 
 end
 
@@ -270,19 +372,95 @@ function UsarObjetos()
 
     if TristyMenu.items.useBOTRK and (GetDistance(Target) < 450) then
         if BOTRKlisto then
-            CastItem(3153, Target)
+            CastSpell(EspadaDelChoro, Target)
         end
     end
 
     if TristyMenu.items.useBC and (GetDistance(Target) < 450) then
         if BClisto then
-            CastItem(3144, Target)
+            CastSpell(CurvedPenis, Target)
         end
     end
 
     if TristyMenu.items.useDFG and (GetDistance(Target) < TristyMenu.items.rangeToDFG) then
         if DFGlisto then
-            CastItem(3128, Target)
+            CastSpell(GarraIgnea, Target)
         end
     end
 end
+
+function InterrumpirMenu()
+    if #InterrumpirJuego > 0 then
+        for i, hechizoInter in pairs(InterrumpirJuego) do
+            TristyMenu.inter:addParam(hechizoInter, hechizoInter, SCRIPT_PARAM_ONOFF, true)
+        end
+    else
+        TristyMenu.inter:addParam("info2", "No supported spells found", SCRIPT_PARAM_INFO, "")
+    end
+end
+
+function OnProcessSpell(unit, spell)
+
+    if #InterrumpirJuego > 0 and TristyMenu.inter.interG and Rlista then
+        for i, habilidad in pairs(InterrumpirJuego) do
+            if spell.name == habilidad and (unit.team ~= myHero.team) and TristyMenu.inter[habilidad] then
+                if GetDistance(unit) < rangoR then
+                    CastSpell(_R, unit)
+                end
+            end
+        end
+    end
+
+    if #AcercadoresJuego > 0 and Rlista then
+        for i, 
+end
+
+function CalculoDeDano()
+
+    for i=1, heroManager.iCount do
+        local objetivo = heroManager:GetHero(i)
+        if ValidTarget(objetivo, 3500) and objetivo ~= nil then
+            dfgDMG, bcDMG, botrkDMG = 0, 0, 0
+            wDMG = ((Wlista and getDmg("W", objetivo, myHero)) or 0)
+            eDMG = ((Elista and getDmg("E", objetivo, myHero, 3)) or 0)
+            rDMG = ((Rlista and getDmg("R", objetivo, myHero)) or 0)
+            dfgDMG = ((DFGlisto and getDmg("DFG", objetivo, myHero)) or 0)
+            bcDMG = ((BClisto and getDmg("BWC", objetivo, myHero)) or 0)
+            botrkDMG = ((BOTRKlisto and getDmg("RUINEDKING", objetivo, myHero)) or 0)
+            iDMG = ((Ilista and getDmg("IGNITE", objetivo, myHero)) or 0)
+            itemsDMG = dfgDMG + bcDMG + botrkDMG
+
+            if (wDMG + eDMG + rDMG < objetivo.health) then
+                TextosMatar[i] = 9
+            elseif itemsDMG >= objetivo.health then
+                TextosMatar[i] = 8
+            elseif Wlista and (wDMG >= objetivo.health) then
+                TextosMatar[i] = 7
+            elseif Elista and (eDMG >= objetivo.health) then
+                TextosMatar[i] = 6
+            elseif Rlista and (rDMG >= objetivo.health) then
+                TextosMatar[i] = 5
+            elseif Wlista and Elista and (wDMG + eDMG >= objetivo.health) then
+                TextosMatar[i] = 4
+            elseif Wlista and Rlista and (wDMG + rDMG >= objetivo.health) then
+                TextosMatar[i] = 3
+            elseif Elista and Rlista and (eDMG + rDMG >= objetivo.health) then
+                TextosMatar[i] = 2
+            elseif Wlista and Elista and Rlista and (wDMG and eDMG and rDMG >= objetivo.health) then
+                TextosMatar[i] = 1
+            end
+        end
+    end
+end
+
+function GapCloserMenu()
+
+    if #AcercadoresJuego > 0 then
+        for i, hechizoGC in pairs(AcercadoresJuego) do
+            TristyMenu.agc:addParam(hechizoGC, hechizoGC, SCRIPT_PARAM_ONOFF, false)
+        end
+    else
+        TristyMenu.agc:addParam("info3", "No supported spells found", SCRIPT_PARAM_INFO, "")
+    end
+end
+

@@ -1,7 +1,7 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = 0.05
+local version = 0.06
 
 if myHero.charName ~= "Tristana" then return end
 if VIP_USER then
@@ -35,6 +35,7 @@ function Variables()
     castigo = nil
     ts = nil
     SOWi = nil
+    currentHealth = ((myHero.health * 100) / myHero.maxHealth)
 
     EspadaDelChoro, CurvedPenis, GarraIgnea = nil, nil, nil
     BOTRKlisto, BClisto, DFGlisto = nil, nil, nil
@@ -52,7 +53,25 @@ function Variables()
         { nombre = "Poppy"     , hechizo = "PoppyHeroicCharge"   },
         { nombre = "Quinn"     , hechizo = "QuinnE"              },
         { nombre = "XinZhao"   , hechizo = "XenZhaoSweep"        },
-        { nombre = "LeeSin"    , hechizo = "blindmonkqtwo"       }
+        { nombre = "LeeSin"    , hechizo = "blindmonkqtwo"       },
+        --Non Targeted--
+        { nombre = "Aatrox"    , hechizo = "AatroxQ"             },
+        { nombre = "Gragas"    , hechizo = "GragasE"             },
+        { nombre = "Graves"    , hechizo = "GravesMove"          },
+        { nombre = "Hecarim"   , hechizo = "HecarimUlt"          },
+        { nombre = "JarvanIV"  , hechizo = "JarvanIVDragonStrike"},
+        { nombre = "JarvanIV"  , hechizo = "JarvanIVCataclysm"   },  
+        { nombre = "Khazix"    , hechizo = "KhazixE"             },
+        { nombre = "Khazix"    , hechizo = "khazixelong"         },  
+        { nombre = "Leblanc"   , hechizo = "LeblancSlide"        },
+        { nombre = "Leblanc"   , hechizo = "LeblancSlideM"       },
+        { nombre = "Leona"     , hechizo = "LeonaZenithBlade"    },
+        { nombre = "Malphite"  , hechizo = "UFSlash"             },
+        { nombre = "Renekton"  , hechizo = "RenektonSliceAndDice"},
+        { nombre = "Sejuani"   , hechizo = "SejuaniArcticAssault"}, 
+        { nombre = "Shen"      , hechizo = "ShenShadowDash"      },
+        { nombre = "Tristana"  , hechizo = "RocketJump"          },
+        { nombre = "Tryndamere", hechizo = "slashCast"           }
     }
     TextosMatar = {}
     ListaTextos = { "W+E+R", "E+R", "W+R", "W+E", "R", "E", "W", "Items", "Harass" }
@@ -76,7 +95,6 @@ function Variables()
         { nombre = "Velkoz"      , hechizo = "VelkozR"},
         { nombre = "Warwick"     , hechizo = "InfiniteDuress"}
     }
-
     local EquipoEnemigo = GetEnemyHeroes()
     for i, enemigo in pairs(EquipoEnemigo) do
         for j, campeon in pairs(InterrumpirCompleto) do
@@ -137,6 +155,8 @@ function Menu()
     TristyMenu.inter:addParam("interG", "Interrupt?", SCRIPT_PARAM_ONOFF, true)
 
     TristyMenu:addSubMenu("Anti Gap Closer", "agc")
+    TristyMenu.agc:addParam("minHPagc", "Min HP % to push enemies away", SCRIPT_PARAM_SLICE, 40, 1, 100, 0)
+    TristyMenu.agc:addParam("info4", "Current % health", SCRIPT_PARAM_INFO, "%")
 
     TristyMenu:addSubMenu("Items", "items")
     TristyMenu.items:addParam("itemsG", "Want to use items in combo?", SCRIPT_PARAM_ONOFF, true)
@@ -158,6 +178,7 @@ function Menu()
     TristyMenu:addSubMenu("Drawing", "draw")
     TristyMenu.draw:addParam("drawQrange", "Draw Range to use Q", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawWrange", "Draw W Range", SCRIPT_PARAM_ONOFF, true)
+    TristyMenu.draw:addParam("drawWslowRange", "Draw W slow range", SCRIPT_PARAM_ONOFF, false)
     TristyMenu.draw:addParam("drawErange", "Draw E Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawRrange", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawAArange", "Draw AA Range", SCRIPT_PARAM_ONOFF, true)
@@ -195,7 +216,7 @@ function OnDraw()
         if myHero.dead then return end
 
         if TristyMenu.draw.drawAArange then
-            SOWi:DrawAARange()
+            DrawCircle(myHero.x, myHero.y, myHero.z, SOWi:MyRange(), ARGB(255, 124, 255, 203))
         end
 
         if TristyMenu.draw.drawQrange then
@@ -205,6 +226,19 @@ function OnDraw()
         if TristyMenu.draw.drawWrange then
             DrawCircle(myHero.x, myHero.y, myHero.z, rangoW, ARGB(255, 0, 255, 0))
         end
+
+        if TristyMenu.draw.drawWslowRange and Wlista then
+            local TristVector = Vector(myHero.x, myHero.z)
+            local RatonVector = Vector(mousePos.x, mousePos.z)
+            local wDrawOffset = 50
+            if GetDistance(TristVector, RatonVector) < rangoW - wDrawOffset then
+                DrawCircle(mousePos.x, mousePos.y, mousePos.z, anchoW, RGB(190, 155, 151))
+            else
+                local BordeDraw = TristVector+(RatonVector-TristVector):normalized() * (rangoW - wDrawOffset)
+                DrawCircle(BordeDraw.x, myHero.y, BordeDraw.y, anchoW, RGB(190, 155, 151))
+            end
+        end
+
 
         if TristyMenu.draw.drawErange then
             DrawCircle(myHero.x, myHero.y, myHero.z, rangoE, ARGB(255, 0, 0, 255))
@@ -237,6 +271,8 @@ function OnDraw()
 end
 
 function Chequeos()
+
+    TristyMenu.agc.info4 = (math.floor((myHero.health * 100) / myHero.maxHealth).."%")
 
     Qlista = (myHero:CanUseSpell(_Q) == READY)
     Wlista = (myHero:CanUseSpell(_W) == READY)
@@ -416,7 +452,7 @@ function OnProcessSpell(unit, spell)
     if #AcercadoresJuego > 0 and Rlista then
         for i, habilidadGC in pairs(AcercadoresJuego) do
             if spell.name == habilidadGC and (unit.team ~= myHero.team) and TristyMenu.agc[habilidadGC] then
-                if GetDistance(spell.endPos) <= 50 then
+                if GetDistance(spell.endPos) <= 275 and (myHero.health <= ((TristyMenu.agc.minHPagc / 100) * myHero.maxHealth)) then
                     CastSpell(_R, unit)
                 end 
             end

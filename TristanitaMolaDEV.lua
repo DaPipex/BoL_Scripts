@@ -1,7 +1,7 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = "0.09"
+local version = "0.10"
 
 if myHero.charName ~= "Tristana" then return end
 
@@ -270,13 +270,13 @@ function OnDraw()
         end
 
         if TristyMenu.combo.wSettings.drawWrangeTarget and Target ~= nil then
-            local barPos = WorldToScreen(D3DXVECTOR3(Target.x, Target.y, Target.z)) --(Credit to Zikkah)
-            local PosX = barPos.x - 35
-            local PosY = barPos.y - 10
             DrawCircle(Target.x, Target.y, Target.z, TristyMenu.combo.wSettings.sliderWrange, ARGB(255, 255, 0, 255))
         end
         
         if TristyMenu.combo.wSettings.drawNumberOfEnemies and Target ~= nil then
+            local barPos = WorldToScreen(D3DXVECTOR3(Target.x, Target.y, Target.z)) --(Credit to Zikkah)
+            local PosX = barPos.x - 35
+            local PosY = barPos.y - 10
             DrawText(tostring(CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)), 25, PosX, PosY, ARGB(255, 255, 204, 0))
         end
 

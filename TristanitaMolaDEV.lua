@@ -273,7 +273,7 @@ function OnDraw()
             local PosX = barPos.x - 35
             local PosY = barPos.y - 10
             DrawCircle(Target.x, Target.y, Target.z, TristyMenu.combo.wSettings.sliderWrange, ARGB(255, 255, 0, 255))
-            DrawText(tostring(CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)), 25, PosX, PosY, ARGB(255, 255, 204, 0)
+            DrawText(tostring(CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)), 25, PosX, PosY, ARGB(255, 255, 204, 0))
         end
 
         if TristyMenu.draw.drawWslowRange and Wlista then

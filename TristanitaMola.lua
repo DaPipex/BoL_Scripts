@@ -516,11 +516,11 @@ function OnProcessSpell(unit, spell)
         for i, habilidadGC in pairs(AcercadoresJuego) do
             if spell.name == habilidadGC and (unit.team ~= myHero.team) and TristyMenu.agc[habilidadGC] then
                 if GetDistance(spell.endPos) <= 275 and (myHero.health <= ((TristyMenu.agc.minHPagc / 100) * myHero.maxHealth)) then
-                CastSpell(_R, unit)
-            end 
+                    CastSpell(_R, unit)
+                end 
+            end
         end
     end
-end
 end
 
 function CalculoDeDano()

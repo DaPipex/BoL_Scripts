@@ -7,7 +7,7 @@ if myHero.charName ~= "Tristana" then return end
 
 --Auto Update - Credits Honda7--
 
-local DaPipexTristUpdate = false
+local DaPipexTristUpdate = true
 local UPDATE_SCRIPT_NAME = "TristanitaMola"
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/DaPipex/BoL_Scripts/master/TristanitaMola.lua".."?rand="..math.random(1,10000)

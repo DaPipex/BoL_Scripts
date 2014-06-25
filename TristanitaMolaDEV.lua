@@ -23,9 +23,9 @@ if DaPipexTristUpdate then
         if ServerVersion then
             ServerVersion = tonumber(ServerVersion)
             if tonumber(version) < ServerVersion then
-                AutoupdaterMsg("New version available"..ServerVersion)
+                AutoupdaterMsg("New version available "..ServerVersion)
                 AutoupdaterMsg("Updating, please don't press F9")
-                DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end)  
+                DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)
             else
                 AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
             end
@@ -272,8 +272,9 @@ function OnDraw()
             local barPos = WorldToScreen(D3DXVECTOR3(Target.x, Target.y, Target.z)) --(Credit to Zikkah)
             local PosX = barPos.x - 35
             local PosY = barPos.y - 10
+            local numeroDeEnemigos = CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)
             DrawCircle(Target.x, Target.y, Target.z, TristyMenu.combo.wSettings.sliderWrange, ARGB(255, 255, 0, 255))
-            DrawText(CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target), 16, PosX, PosY, ARGB(255, 255, 204, 0)
+            DrawText(tostring(numeroDeEnemigos), 16, PosX, PosY, ARGB(255, 255, 204, 0))
         end
 
         if TristyMenu.draw.drawWslowRange and Wlista then
@@ -512,11 +513,11 @@ function OnProcessSpell(unit, spell)
         for i, habilidadGC in pairs(AcercadoresJuego) do
             if spell.name == habilidadGC and (unit.team ~= myHero.team) and TristyMenu.agc[habilidadGC] then
                 if GetDistance(spell.endPos) <= 275 and (myHero.health <= ((TristyMenu.agc.minHPagc / 100) * myHero.maxHealth)) then
-                CastSpell(_R, unit)
-            end 
+                    CastSpell(_R, unit)
+                end 
+            end
         end
     end
-end
 end
 
 function CalculoDeDano()
@@ -574,7 +575,7 @@ function CountEnemyHeroInRangeOfHero(range, hero)
     local WachosInRange = 0
     for i = 1, heroManager.iCount do
         local wachoCount = heroManager:getHero(i)
-        if ValidTarget(hero) and GetDistanceSqr(hero, wachoCount) <= range then
+        if ValidTarget(wachoCount) and GetDistanceSqr(hero, wachoCount) <= range then
             WachosInRange = WachosInRange + 1
             if wachoCount.networkID == hero.networkID then
                 WachosInRange = WachosInRange - 1

@@ -1,9 +1,42 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = 0.06
+local version = "0.07"
 
 if myHero.charName ~= "Tristana" then return end
+
+--Auto Update - Credits Honda7--
+
+local DaPipexTristUpdate = true
+local UPDATE_SCRIPT_NAME = "TristanitaMola"
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/DaPipex/BoL_Scripts/master/TristanitaMola.lua".."?rand="..math.random(1,10000)
+local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
+local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+
+function AutoupdaterMsg(msg) print("<font color=\"#FF0000\">"..UPDATE_SCRIPT_NAME..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+if DaPipexTristUpdate then
+    local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
+    if ServerData then
+        local ServerVersion = string.match(ServerData, "local version = \"%d+.%d+\"")
+        ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
+        if ServerVersion then
+            ServerVersion = tonumber(ServerVersion)
+            if tonumber(version) < ServerVersion then
+                AutoupdaterMsg("New version available "..ServerVersion)
+                AutoupdaterMsg("Updating, please don't press F9")
+                DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)  
+            else
+                AutoupdaterMsg("You have got the latest version ("..ServerVersion..") Check post for changelog!")
+            end
+        end
+    else
+        AutoupdaterMsg("Error downloading version info")
+    end
+end
+
+--End credits - Honda 7--
+
 if VIP_USER then
     VPredActive = true
 else
@@ -36,6 +69,7 @@ function Variables()
     ts = nil
     SOWi = nil
     currentHealth = ((myHero.health * 100) / myHero.maxHealth)
+    tablaWenemigos = {"Always Use", "1 or more", "2 or more", "3 or more", "4 or more"}
 
     EspadaDelChoro, CurvedPenis, GarraIgnea = nil, nil, nil
     BOTRKlisto, BClisto, DFGlisto = nil, nil, nil
@@ -128,7 +162,7 @@ function CargarPredicciones()
         freePredW = TargetPrediction(rangoW, velocidadW, demoraW, anchoW)
         PrintChat("<font color='#FF9A00'>Pos que Tristanita Mola: "..version.." Free prediction version Loaded!</font>")
     end
-    
+
     VP = VPrediction()
     SOWi = SOW(VP)
     SOWi:LoadToMenu(TristyMenu.orbw)
@@ -148,6 +182,13 @@ function Menu()
     TristyMenu.combo:addParam("useQ", "Use Q in combo", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.combo:addParam("rangeToQ", "Range to use Q", SCRIPT_PARAM_SLICE, 350, 350, 700, 0)
     TristyMenu.combo:addParam("useW", "Use W in combo", SCRIPT_PARAM_ONOFF, false)
+    
+    TristyMenu.combo:addSubMenu("W Options", "wSettings")
+    TristyMenu.combo.wSettings:addParam("maxWenemies", "Don't use W if # enemies around", SCRIPT_PARAM_LIST, 1, tablaWenemigos)
+    TristyMenu.combo.wSettings:addParam("sliderWrange", "Range to check around Target", SCRIPT_PARAM_SLICE, 800, 300, 1000, 0)
+    TristyMenu.combo.wSettings:addParam("drawWrangeTarget", "Draw this range?", SCRIPT_PARAM_ONOFF, false)
+    TristyMenu.combo.wSettings:addParam("drawNumberOfEnemies", "Draw enemies in range", SCRIPT_PARAM_ONOFF, false)
+
     TristyMenu.combo:addParam("useE", "Use E...", SCRIPT_PARAM_LIST, 2, { "Never", "ASAP" })
     TristyMenu.combo:addParam("useR", "Use R in combo", SCRIPT_PARAM_ONOFF, false)
 
@@ -163,7 +204,8 @@ function Menu()
     TristyMenu.items:addParam("useBOTRK", "Use Ruined king", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useBC", "Use Bilgewater Cutlass", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useDFG", "Use DeathFire Grasp", SCRIPT_PARAM_ONOFF, true)
-    TristyMenu.items:addParam("rangeToDFG", "Range to use DFG", SCRIPT_PARAM_SLICE, 500, 100, 750, 0)
+    TristyMenu.items:addParam("useBFT", "Use Black Fire Torch", SCRIPT_PARAM_ONOFF, true)
+    TristyMenu.items:addParam("rangeToDFG", "Range to use DFG or BFT", SCRIPT_PARAM_SLICE, 500, 100, 750, 0)
 
     TristyMenu:addSubMenu("KS", "killsteal")
     TristyMenu.killsteal:addParam("ksW", "Killsteal with W", SCRIPT_PARAM_ONOFF, true)
@@ -182,7 +224,7 @@ function Menu()
     TristyMenu.draw:addParam("drawErange", "Draw E Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawRrange", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawAArange", "Draw AA Range", SCRIPT_PARAM_ONOFF, true)
-    TristyMenu.draw:addParam("drawDFGrange", "Draw DFG Range", SCRIPT_PARAM_ONOFF, false)
+    TristyMenu.draw:addParam("drawDFGrange", "Draw DFG/BFT Range", SCRIPT_PARAM_ONOFF, false)
     TristyMenu.draw:addParam("drawKtext", "Draw Kill text", SCRIPT_PARAM_ONOFF, true)
 
     ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, rangoW)
@@ -225,6 +267,17 @@ function OnDraw()
 
         if TristyMenu.draw.drawWrange then
             DrawCircle(myHero.x, myHero.y, myHero.z, rangoW, ARGB(255, 0, 255, 0))
+        end
+
+        if TristyMenu.combo.wSettings.drawWrangeTarget and Target ~= nil then
+            DrawCircle(Target.x, Target.y, Target.z, TristyMenu.combo.wSettings.sliderWrange, ARGB(255, 255, 0, 255))
+        end
+        
+        if TristyMenu.combo.wSettings.drawNumberOfEnemies and Target ~= nil then
+            local barPos = WorldToScreen(D3DXVECTOR3(Target.x, Target.y, Target.z)) --(Credit to Zikkah)
+            local PosX = barPos.x - 35
+            local PosY = barPos.y - 10
+            DrawText(tostring(CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)), 25, PosX, PosY, ARGB(255, 255, 204, 0))
         end
 
         if TristyMenu.draw.drawWslowRange and Wlista then
@@ -283,10 +336,12 @@ function Chequeos()
     EspadaDelChoro = GetInventorySlotItem(3153)
     CurvedPenis = GetInventorySlotItem(3144)
     GarraIgnea = GetInventorySlotItem(3128)
+    AntorchaNegra = GetInventorySlotItem(3188)
 
     BOTRKlisto = (EspadaDelChoro ~= nil and myHero:CanUseSpell(EspadaDelChoro) == READY)
     BClisto = (CurvedPenis ~= nil and myHero:CanUseSpell(CurvedPenis) == READY)
     DFGlisto = (GarraIgnea ~= nil and myHero:CanUseSpell(GarraIgnea) == READY)
+    BFTlisto = (AntorchaNegra ~= nil and myHero:CanUseSpell(AntorchaNegra) == READY)
 
     ts:update()
     Target = ts.target
@@ -340,14 +395,16 @@ end
 
 function CastSpecialW()
 
+    local wachosAlrededor = CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)
+
     if VPredActive then
         local CastPosition, HitChance, Position = VP:GetCircularCastPosition(Target, demoraW, anchoW, rangoW, velocidadW, myHero, false)
-        if HitChance >= 1 and (GetDistance(CastPosition) < rangoW) then
+        if HitChance >= 1 and (GetDistance(CastPosition) < rangoW) and (wachosAlrededor < (TristyMenu.combo.wSettings.maxWenemies - 1)) then
             CastSpell(_W, CastPosition.x, CastPosition.z)
         end
     else
         local Position = freePredW:GetPrediction(Target)
-        if GetDistance(Position) < rangoW then
+        if GetDistance(Position) < rangoW and (wachosAlrededor < (TristyMenu.combo.wSettings.maxWenemies - 1)) then
             CastSpell(_W, Position.x, Position.z)
         end
     end
@@ -425,6 +482,12 @@ function UsarObjetos()
             CastSpell(GarraIgnea, Target)
         end
     end
+
+    if TristyMenu.items.useBFT and (GetDistance(Target) < TristyMenu.items.rangeToDFG) then
+        if BFTlisto then
+            CastSpell(AntorchaNegra, Target)
+        end
+    end
 end
 
 function InterrumpirMenu()
@@ -453,11 +516,11 @@ function OnProcessSpell(unit, spell)
         for i, habilidadGC in pairs(AcercadoresJuego) do
             if spell.name == habilidadGC and (unit.team ~= myHero.team) and TristyMenu.agc[habilidadGC] then
                 if GetDistance(spell.endPos) <= 275 and (myHero.health <= ((TristyMenu.agc.minHPagc / 100) * myHero.maxHealth)) then
-                    CastSpell(_R, unit)
-                end 
-            end
+                CastSpell(_R, unit)
+            end 
         end
     end
+end
 end
 
 function CalculoDeDano()
@@ -472,8 +535,9 @@ function CalculoDeDano()
             dfgDMG = ((DFGlisto and getDmg("DFG", objetivo, myHero)) or 0)
             bcDMG = ((BClisto and getDmg("BWC", objetivo, myHero)) or 0)
             botrkDMG = ((BOTRKlisto and getDmg("RUINEDKING", objetivo, myHero)) or 0)
+            bftDMG = ((BFTlisto and getDmg("BLACKFIRE", objetivo, myHero)) or 0)
             iDMG = ((Ilista and getDmg("IGNITE", objetivo, myHero)) or 0)
-            itemsDMG = dfgDMG + bcDMG + botrkDMG
+            itemsDMG = dfgDMG + bcDMG + botrkDMG + bftDMG
 
             if (wDMG + eDMG + rDMG < objetivo.health) then
                 TextosMatar[i] = 9
@@ -507,4 +571,19 @@ function GapCloserMenu()
     else
         TristyMenu.agc:addParam("info3", "No supported spells found", SCRIPT_PARAM_INFO, "")
     end
+end
+
+function CountEnemyHeroInRangeOfHero(range, hero)
+    range = range and range*range
+    local WachosInRange = 0
+    for i = 1, heroManager.iCount do
+        local wachoCount = heroManager:getHero(i)
+        if ValidTarget(wachoCount) and GetDistanceSqr(hero, wachoCount) <= range then
+            WachosInRange = WachosInRange + 1
+            if wachoCount.networkID == hero.networkID then
+                WachosInRange = WachosInRange - 1
+            end
+        end
+    end
+    return WachosInRange
 end

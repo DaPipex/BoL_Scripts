@@ -1,7 +1,7 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = "0.08"
+local version = "0.09"
 
 if myHero.charName ~= "Tristana" then return end
 
@@ -187,6 +187,7 @@ function Menu()
     TristyMenu.combo.wSettings:addParam("maxWenemies", "Don't use W if # enemies around", SCRIPT_PARAM_LIST, 1, tablaWenemigos)
     TristyMenu.combo.wSettings:addParam("sliderWrange", "Range to check around Target", SCRIPT_PARAM_SLICE, 800, 300, 1000, 0)
     TristyMenu.combo.wSettings:addParam("drawWrangeTarget", "Draw this range?", SCRIPT_PARAM_ONOFF, false)
+    TristyMenu.combo.wSettings:addParam("drawNumberOfEnemies", "Draw enemies in range", SCRIPT_PARAM_ONOFF, false)
 
     TristyMenu.combo:addParam("useE", "Use E...", SCRIPT_PARAM_LIST, 2, { "Never", "ASAP" })
     TristyMenu.combo:addParam("useR", "Use R in combo", SCRIPT_PARAM_ONOFF, false)
@@ -223,7 +224,7 @@ function Menu()
     TristyMenu.draw:addParam("drawErange", "Draw E Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawRrange", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.draw:addParam("drawAArange", "Draw AA Range", SCRIPT_PARAM_ONOFF, true)
-    TristyMenu.draw:addParam("drawDFGrange", "Draw DFG Range", SCRIPT_PARAM_ONOFF, false)
+    TristyMenu.draw:addParam("drawDFGrange", "Draw DFG/BFT Range", SCRIPT_PARAM_ONOFF, false)
     TristyMenu.draw:addParam("drawKtext", "Draw Kill text", SCRIPT_PARAM_ONOFF, true)
 
     ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, rangoW)
@@ -273,6 +274,9 @@ function OnDraw()
             local PosX = barPos.x - 35
             local PosY = barPos.y - 10
             DrawCircle(Target.x, Target.y, Target.z, TristyMenu.combo.wSettings.sliderWrange, ARGB(255, 255, 0, 255))
+        end
+        
+        if TristyMenu.combo.wSettings.drawNumberOfEnemies and Target ~= nil then
             DrawText(tostring(CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)), 25, PosX, PosY, ARGB(255, 255, 204, 0))
         end
 

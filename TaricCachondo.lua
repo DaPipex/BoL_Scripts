@@ -339,6 +339,9 @@ function LowestAllyInMyRange(range)
 			end
 		end
 	end
+	if pobrecito == nil then
+		pobrecito == myHero
+	end
 	return pobrecito
 end
 

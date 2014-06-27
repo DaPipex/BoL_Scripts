@@ -2,7 +2,7 @@
 by
 DaPipex]]
 
-local version = "0.01"
+local version = "0.02"
 
 if myHero.charName ~= "Taric" then return end
 
@@ -330,11 +330,11 @@ end
 function LowestAllyInMyRange(range)
 	local pobrecito = nil
 	for i=1, heroManager.iCount do
-		local wachitoPrueba = heroManager:getHero(i)
+		local wachitoPrueba = heroManager:GetHero(i)
 		if wachitoPrueba.team == myHero.team then
 			if not wachitoPrueba.dead and GetDistance(wachitoPrueba) < range then
 				pobrecito = wachitoPrueba
-			elseif (pobrecito.health / pobrecito.maxHealth) > (wachitoPrueba.health / wachitoPrueba.maxHealth) and not pobrecito.dead then
+			elseif (pobrecito.health / pobrecito.maxHealth) > (wachitoPrueba.health / wachitoPrueba.maxHealth) and not pobrecito.dead and GetDistance(wachitoPrueba) < range then
 				pobrecito = wachitoPrueba
 			end
 		end

@@ -1,14 +1,14 @@
 --[[Taric, el caballero cachondo
 by
-DaPipex]]--
+DaPipex]]
 
-local version = 0.01
+local version = "0.01"
 
 if myHero.charName ~= "Taric" then return end
 
 --Auto Update - Credits Honda7--
 
-local DaPipexTaricUpdate = false
+local DaPipexTaricUpdate = true
 local UPDATE_SCRIPT_NAME = "TaricCachondo"
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/DaPipex/BoL_Scripts/master/TaricCachondo.lua".."?rand="..math.random(1,10000)
@@ -48,7 +48,7 @@ function OnLoad()
 	Variables()
 	TaricMenu()
 	InterrumpirMenu()
-	DelayAction(EndStuff, 2)
+	DelayAction(Mensajito, 2)
 
 end
 
@@ -62,9 +62,10 @@ function Variables()
 	castigo = nil
 	tieneBuff = false
 	tiempoAnimacion = 0
+	author = "DaPipex"
 
 	TextosMatar = {}
-	ListaTextos = {}
+	ListaTextos = { "W+E+R", "E+R", "W+R", "W+E", "R", "E", "W", "Harass"}
 	TextosEsperar = {}
 
 	InterrumpirJuego = {}
@@ -136,8 +137,8 @@ function TaricMenu()
 
 	MachoteConfig:addSubMenu("Keys", "keys")
 	MachoteConfig.keys:addParam("comboKey", "Normal Combo [all in] (Space)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-	MachoteConfig.keys:addParam("comboWeavingKey", "Spell Weaving Combo", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Z"))
-	MachoteConfig.keys:addParam("harassKey", "Harass with stun", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+	MachoteConfig.keys:addParam("comboWeavingKey", "Spell Weaving Combo", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+	MachoteConfig.keys:addParam("harassKey", "Harass with stun", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
 
 	MachoteConfig:addSubMenu("Interrupt", "inter")
 	MachoteConfig.inter:addParam("info1", "Interrupt with stun:", SCRIPT_PARAM_INFO, "")
@@ -152,15 +153,20 @@ function TaricMenu()
 	MachoteConfig.killsteal:addParam("ksI", "KS with Ignite", SCRIPT_PARAM_ONOFF, true)
 
 	MachoteConfig:addSubMenu("Drawing", "draw")
+	MachoteConfig.draw:addParam("drawAArange", "Draw AA range", SCRIPT_PARAM_ONOFF, true)
 	MachoteConfig.draw:addParam("drawQrange", "Draw Q range", SCRIPT_PARAM_ONOFF, true)
 	MachoteConfig.draw:addParam("drawWrange", "Draw W range", SCRIPT_PARAM_ONOFF, true)
 	--MachoteConfig.draw:addParam("drawMaxErange", "Draw max E range", SCRIPT_PARAM_ONOFF, true)
 	MachoteConfig.draw:addParam("drawErange", "Draw user-set E range", SCRIPT_PARAM_ONOFF, true)
 	MachoteConfig.draw:addParam("drawRrange", "Draw R range", SCRIPT_PARAM_ONOFF, true)
 	MachoteConfig.draw:addParam("drawKill", "Draw Killable", SCRIPT_PARAM_ONOFF, true)
+	MachoteConfig.draw:addParam("drawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
 
-	MachoteConfig:addSubMenu("Debug", "debug")
-	MachoteConfig.debug:addParam("debug", "Debugging", SCRIPT_PARAM_ONOFF, false)
+	MachoteConfig:addSubMenu("Debug", "Debug")
+	MachoteConfig.Debug:addParam("Debug", "Debugging", SCRIPT_PARAM_ONOFF, false)
+
+	MachoteConfig:addParam("info3", "Script Author:", SCRIPT_PARAM_INFO, author)
+	MachoteConfig:addParam("info4", "Script Version:", SCRIPT_PARAM_INFO, version)
 
 	ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, rangoE)
 	ts.name = "Machote"
@@ -168,8 +174,8 @@ function TaricMenu()
 
 end
 
-function EndStuff()
-	PrintChat("<font color='#C1F220'>Loaded Taric, el caballero cachondo. Version: "..version.." Have fun!</font>")
+function Mensajito()
+	PrintChat("<font color='#19DEDB'>Loaded Taric, el caballero cachondo. Version: "..version.." Have fun!</font>")
 
 	loadDone = true
 end
@@ -181,21 +187,18 @@ function OnTick()
 		Chequeos()
 		Killsteal()
 		CalculoDeDano()
-		SOWi:ForceTarget(Target)
 
-		--Keys and their functions--
+		if MachoteConfig.combo.Qinfo.autoHealAlly then
+			AutoHealAlly()
+		end
+
 		if MachoteConfig.keys.comboKey then
 			Combo()
 		end
 
-		--[[if MachoteConfig.keys.comboWeavingKey then
-			WeavingCombo(Aweonao)
-		end]]--
-
 		if MachoteConfig.keys.harassKey then
 			Harass()
 		end
-		--Keys and functions--
 	end
 end
 
@@ -214,16 +217,16 @@ end
 
 function Combo()
 
-	if Qlista then
+	if Qlista and Target ~= nil then
 		if MachoteConfig.combo.Qinfo.useQ == 2 and (myHero.health <= ((MachoteConfig.combo.Qinfo.minHPtoHealSelf / 100) * myHero.maxHealth)) then
-			if MachoteConfig.debug.debug then
+			if MachoteConfig.Debug.Debug then
 				PrintChat("Called Q Self")
 			end
 			CastSpell(_Q, myHero)
 		elseif MachoteConfig.combo.Qinfo.useQ == 3 then
-			local wachoPeor = LowestAllyInMyRange(rangoQ + 25)
+			local wachoPeor = LowestAllyInMyRange(rangoQ)
 			if wachoPeor.health <= ((MachoteConfig.combo.Qinfo.minHPtoHealAlly / 100) * wachoPeor.maxHealth) then
-				if MachoteConfig.debug.debug then
+				if MachoteConfig.Debug.Debug then
 					PrintChat("Called Q Lowest Ally")
 				end
 				CastSpell(_Q, wachoPeor)
@@ -232,18 +235,18 @@ function Combo()
 	end
 
 	if Wlista then
-		if MachoteConfig.combo.Winfo.useW and ((MachoteConfig.combo.Winfo.minWenemies > CountEnemyHeroInRange(rangoW)) or CountEnemyHeroInRange(rangoW) == 1) then
-			if MachoteConfig.debug.debug then
+		if MachoteConfig.combo.Winfo.useW and ((MachoteConfig.combo.Winfo.minWenemies < CountEnemyHeroInRange(rangoW - 10)) or CountEnemyHeroInRange(rangoW) == 1) then
+			if MachoteConfig.Debug.Debug then
 				PrintChat("Called W")
 			end
 			CastSpell(_W)
 		end
 	end
 
-	if Elista then
+	if Elista and Target ~= nil then
 		if MachoteConfig.combo.Einfo.useE then
-			if MachoteConfig.combo.Einfo.rangeToE <= GetDistance(Target) then
-				if MachoteConfig.debug.debug then
+			if MachoteConfig.combo.Einfo.rangeToE >= GetDistance(Target) then
+				if MachoteConfig.Debug.Debug then
 					PrintChat("Called E on "..Target.charName)
 				end
 				CastSpell(_E, Target)
@@ -252,8 +255,8 @@ function Combo()
 	end
 
 	if Rlista then
-		if MachoteConfig.combo.Rinfo.useR and ((MachoteConfig.combo.Rinfo.minRenemies > CountEnemyHeroInRange(rangoR)) or CountEnemyHeroInRange(rangoW) == 1) then
-			if MachoteConfig.debug.debug then
+		if MachoteConfig.combo.Rinfo.useR and ((MachoteConfig.combo.Rinfo.minRenemies < CountEnemyHeroInRange(rangoR - 10)) or CountEnemyHeroInRange(rangoW) == 1) then
+			if MachoteConfig.Debug.Debug then
 				PrintChat("Called R")
 			end
 			CastSpell(_R)
@@ -263,9 +266,9 @@ end
 
 function Harass()
 
-	if Elista then
-		if MachoteConfig.combo.Einfo.rangeToE <= GetDistance(Target) then
-			if MachoteConfig.debug.debug then
+	if Elista and Target ~= nil then
+		if MachoteConfig.combo.Einfo.rangeToE >= GetDistance(Target) then
+			if MachoteConfig.Debug.Debug then
 				PrintChat("Called Harass E on "..Target.charName)
 			end
 			CastSpell(_E, Target)
@@ -279,9 +282,9 @@ function Killsteal()
 	for i, enemigo in pairs(wachos) do
 
 		if MachoteConfig.killsteal.ksW then
-			if ValidTarget(enemigo, rangoW) and Wlista and not Elista and not Rlista then
+			if ValidTarget(enemigo, rangoW - 10) and Wlista and not Elista and not Rlista then
 				if enemigo.health <= getDmg("W", enemigo, myHero) then
-					if MachoteConfig.debug.debug then
+					if MachoteConfig.Debug.Debug then
 						PrintChat("Tried to KS with W: "..enemigo.charName)
 					end
 					CastSpell(_W)
@@ -292,7 +295,7 @@ function Killsteal()
 		if MachoteConfig.killsteal.ksE then
 			if ValidTarget(enemigo, rangoE) and Elista and not Rlista then
 				if enemigo.health <= getDmg("E", enemigo, myHero) then
-					if MachoteConfig.debug.debug then
+					if MachoteConfig.Debug.Debug then
 						PrintChat("Tried to KS with E "..enemigo.charName)
 					end
 					CastSpell(_E, enemigo)
@@ -301,9 +304,9 @@ function Killsteal()
 		end
 
 		if MachoteConfig.killsteal.ksR then
-			if ValidTarget(enemigo, rangoR) and Rlista then
+			if ValidTarget(enemigo, rangoR - 10) and Rlista then
 				if enemigo.health <= getDmg("R", enemigo, myHero) then
-					if MachoteConfig.debug.debug then
+					if MachoteConfig.Debug.Debug then
 						PrintChat("Tried to KS with R: "..enemigo.charName)
 					end
 					CastSpell(_R)
@@ -314,7 +317,7 @@ function Killsteal()
 		if MachoteConfig.killsteal.ksI then
 			if ValidTarget(enemigo, 600) and Ilista then
 				if enemigo.health <= getDmg("IGNITE", enemigo, myHero) then
-					if MachoteConfig.debug.debug then
+					if MachoteConfig.Debug.Debug then
 						PrintChat("Tried to KS with Ignite: "..enemigo.charName)
 					end
 					CastSpell(castigo, enemigo)
@@ -348,6 +351,145 @@ function CalculoDeDano()
 			eDMG = ((Elista and getDmg("E", objetivo, myHero)) or 0)
 			rDMG = ((Rlista and getDmg("R", objetivo, myHero)) or 0)
 			iDMG = ((Ilista and getDmg("IGNITE", objetivo, myHero)) or 0)
+
+			if (wDMG + eDMG + rDMG < objetivo.health) then
+				TextosMatar[i] = 8
+			elseif Wlista and (wDMG >= objetivo.health) then
+				TextosMatar[i] = 7
+			elseif Elista and (eDMG >= objetivo.health) then
+				TextosMatar[i] = 6
+			elseif Rlista and (rDMG >= objetivo.health) then
+				TextosMatar[i] = 5
+			elseif Wlista and Elista and (wDMG + eDMG >= objetivo.health) then
+				TextosMatar[i] = 4
+			elseif Wlista and Rlista and (wDMG + rDMG >= objetivo.health) then
+				TextosMatar[i] = 3
+			elseif Elista and Rlista and (eDMG + rDMG >= objetivo.health) then
+				TextosMatar[i] = 2
+			elseif Wlista and Elista and Rlista and (wDMG and eDMG and rDMG >= objetivo.health) then
+				TextosMatar[i] = 1
+			end
 		end
+	end
+end
+
+function OnDraw()
+	if loadDone then
+
+		if MachoteConfig.draw.drawQrange then
+			DrawCircle(myHero.x, myHero.y, myHero.z, rangoQ, RGB(255, 255, 255))
+		end
+
+		if MachoteConfig.draw.drawWrange then
+			DrawCircle(myHero.x, myHero.y, myHero.z, rangoW, RGB(255, 255, 255))
+		end
+
+		if MachoteConfig.draw.drawErange then
+			DrawCircle(myHero.x, myHero.y, myHero.z, MachoteConfig.combo.Einfo.rangeToE, RGB(255, 255, 255))
+		end
+
+		if MachoteConfig.draw.drawRrange then
+			DrawCircle(myHero.x, myHero.y, myHero.z, rangoR, RGB(255, 255, 255))
+		end
+
+		if MachoteConfig.draw.drawAArange then
+			DrawCircle(myHero.x, myHero.y, myHero.z, SOWi:MyRange() + 25, RGB(0, 255, 0))
+		end
+
+		if MachoteConfig.draw.drawTarget and Target ~= nil then
+			DrawCircle(Target.x, Target.y, Target.z, 500, RGB(255, 0, 255))
+		end
+
+		if MachoteConfig.draw.drawKill then
+			for i=1, heroManager.iCount do
+				local objetivo = heroManager:GetHero(i)
+				if ValidTarget(objetivo, 3500) and objetivo ~= nil and TextosEsperar[i] == 1 then
+					PrintFloatText(objetivo, 0, ListaTextos[TextosMatar[i]])
+				end
+				if ValidTarget(objetivo, 3500) then
+					if TextosEsperar[i] == 1 then
+						TextosEsperar[i] = 30
+					else
+						TextosEsperar[i] = TextosEsperar[i] - 1
+					end
+				end
+			end
+		end
+	end
+end
+
+function OnAnimation(unit, animation)
+
+	if unit.isMe and animation:lower():find("attack") and Target ~= nil then
+		if MachoteConfig.Debug.Debug then
+			PrintChat(animation)
+		end
+
+		if MachoteConfig.keys.comboWeavingKey and MachoteConfig.combo.Einfo.useE and Elista and (GetDistance(Target) < ((SOWi:MyRange() + 25) + VP:GetHitBox(Target))) then
+			DelayAction(function() CastSpell(_E, Target) end, tiempoAnimacion + 0.01)
+			if MachoteConfig.Debug.Debug then
+				PrintChat("E en cadena")
+			end
+
+		elseif MachoteConfig.keys.comboWeavingKey and MachoteConfig.combo.Rinfo.useR and Rlista and not Elista and (GetDistance(Target) < ((SOWi:MyRange() + 25) + VP:GetHitBox(Target))) then
+			DelayAction(function() CastSpell(_R) end, tiempoAnimacion + 0.01)
+			if MachoteConfig.Debug.Debug then
+				PrintChat("R en cadena")
+			end
+
+		elseif MachoteConfig.keys.comboWeavingKey and MachoteConfig.combo.Winfo.useW and Wlista and not Elista and not Rlista and (GetDistance(Target) < ((SOWi:MyRange() + 25) + VP:GetHitBox(Target))) then
+			DelayAction(function() CastSpell(_W) end, tiempoAnimacion + 0.01)
+			if MachoteConfig.Debug.Debug then
+				PrintChat("W en cadena")
+			end
+
+		elseif MachoteConfig.keys.comboWeavingKey and not (MachoteConfig.combo.Qinfo.useQ == 1) and Qlista and not Wlista and not Elista and not Rlista and (GetDistance(Target) < (SOWi:MyRange() + 25)) then
+			DelayAction(function() CastSpell(_Q, myHero) end, tiempoAnimacion + 0.01)
+			if MachoteConfig.Debug.Debug then
+				PrintChat("Q en cadena")
+			end
+		end
+	end
+end
+
+function OnProcessSpell(unit, spell)
+
+	if unit == myHero then
+		if spell.name:lower():find("attack") then
+			tiempoAnimacion = spell.windUpTime
+		end
+	end
+
+	if #InterrumpirJuego > 0 and Elista then
+		for i, habilidad in pairs(InterrumpirJuego) do
+			if spell.name == habilidad and (unit.team ~= myHero.team) and MachoteConfig.inter[habilidad] then
+				if GetDistance(unit) < rangoE then
+					CastSpell(_E, unit)
+				end
+			end
+		end
+	end
+end
+
+function AutoHealAlly()
+
+	local ally = GetAllyHeroes()
+	for i, aliadoAcurar in pairs(ally) do
+		if aliadoAcurar.health < ((MachoteConfig.combo.Qinfo.AHAmin / 100) * aliadoAcurar.maxHealth) then
+			if GetDistance(aliadoAcurar) < rangoQ then
+				CastSpell(_Q, aliadoAcurar)
+			end
+		end
+	end
+end
+
+function InterrumpirMenu()
+
+	if #InterrumpirJuego > 0 then
+		for i, hechizoInter in pairs(InterrumpirJuego) do
+			MachoteConfig.inter:addParam(hechizoInter, hechizoInter, SCRIPT_PARAM_ONOFF, true)
+		end
+	else
+		MachoteConfig.inter:addParam("info2", "No supported spells found", SCRIPT_PARAM_INFO, "")
 	end
 end

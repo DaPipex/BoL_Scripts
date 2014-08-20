@@ -1,7 +1,7 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = "0.08"
+local version = "0.10"
 
 if myHero.charName ~= "Tristana" then return end
 
@@ -52,7 +52,7 @@ function OnLoad()
 
     Variables()
     Menu()
-    DelayAction(CargarPredicciones, 2)
+    DelayAction(function() CargarPredicciones() end, 2)
     InterrumpirMenu()
     GapCloserMenu()
 
@@ -88,70 +88,70 @@ function Variables()
         { nombre = "Quinn"     , hechizo = "QuinnE"              },
         { nombre = "XinZhao"   , hechizo = "XenZhaoSweep"        },
         { nombre = "LeeSin"    , hechizo = "blindmonkqtwo"       },
---Non Targeted--
-{ nombre = "Aatrox"    , hechizo = "AatroxQ"             },
-{ nombre = "Gragas"    , hechizo = "GragasE"             },
-{ nombre = "Graves"    , hechizo = "GravesMove"          },
-{ nombre = "Hecarim"   , hechizo = "HecarimUlt"          },
-{ nombre = "JarvanIV"  , hechizo = "JarvanIVDragonStrike"},
-{ nombre = "JarvanIV"  , hechizo = "JarvanIVCataclysm"   },  
-{ nombre = "Khazix"    , hechizo = "KhazixE"             },
-{ nombre = "Khazix"    , hechizo = "khazixelong"         },  
-{ nombre = "Leblanc"   , hechizo = "LeblancSlide"        },
-{ nombre = "Leblanc"   , hechizo = "LeblancSlideM"       },
-{ nombre = "Leona"     , hechizo = "LeonaZenithBlade"    },
-{ nombre = "Malphite"  , hechizo = "UFSlash"             },
-{ nombre = "Renekton"  , hechizo = "RenektonSliceAndDice"},
-{ nombre = "Sejuani"   , hechizo = "SejuaniArcticAssault"}, 
-{ nombre = "Shen"      , hechizo = "ShenShadowDash"      },
-{ nombre = "Tristana"  , hechizo = "RocketJump"          },
-{ nombre = "Tryndamere", hechizo = "slashCast"           }
-}
-TextosMatar = {}
-ListaTextos = { "W+E+R", "E+R", "W+R", "W+E", "R", "E", "W", "Items", "Harass" }
-TextosEsperar = {}
-InterrumpirJuego = {}
-InterrumpirCompleto = {
-    { nombre = "Caitlyn"     , hechizo = "CaitlynAceintheHole"},
-    { nombre = "FiddleSticks", hechizo = "Crowstorm"},
-    { nombre = "FiddleSticks", hechizo = "DrainChannel"},
-    { nombre = "Galio"       , hechizo = "GalioIdolOfDurand"},
-    { nombre = "Karthus"     , hechizo = "FallenOne"},
-    { nombre = "Katarina"    , hechizo = "KatarinaR"},
-    { nombre = "Lucian"      , hechizo = "LucianR"},
-    { nombre = "Malzahar"    , hechizo = "AlZaharNetherGrasp"},
-    { nombre = "MissFortune" , hechizo = "MissFortuneBulletTime"},
-    { nombre = "Nunu"        , hechizo = "AbsoluteZero"},
-    { nombre = "Pantheon"    , hechizo = "Pantheon_GrandSkyfall_Jump"},
-    { nombre = "Shen"        , hechizo = "ShenStandUnited"},
-    { nombre = "Urgot"       , hechizo = "UrgotSwap2"},
-    { nombre = "Varus"       , hechizo = "VarusQ"},
-    { nombre = "Velkoz"      , hechizo = "VelkozR"},
-    { nombre = "Warwick"     , hechizo = "InfiniteDuress"}
-}
-local EquipoEnemigo = GetEnemyHeroes()
-for i, enemigo in pairs(EquipoEnemigo) do
-    for j, campeon in pairs(InterrumpirCompleto) do
-        if enemigo.charName == campeon.nombre then
-            table.insert(InterrumpirJuego, campeon.hechizo)
+        --Non Targeted--
+        { nombre = "Aatrox"    , hechizo = "AatroxQ"             },
+        { nombre = "Gragas"    , hechizo = "GragasE"             },
+        { nombre = "Graves"    , hechizo = "GravesMove"          },
+        { nombre = "Hecarim"   , hechizo = "HecarimUlt"          },
+        { nombre = "JarvanIV"  , hechizo = "JarvanIVDragonStrike"},
+        { nombre = "JarvanIV"  , hechizo = "JarvanIVCataclysm"   },  
+        { nombre = "Khazix"    , hechizo = "KhazixE"             },
+        { nombre = "Khazix"    , hechizo = "khazixelong"         },  
+        { nombre = "Leblanc"   , hechizo = "LeblancSlide"        },
+        { nombre = "Leblanc"   , hechizo = "LeblancSlideM"       },
+        { nombre = "Leona"     , hechizo = "LeonaZenithBlade"    },
+        { nombre = "Malphite"  , hechizo = "UFSlash"             },
+        { nombre = "Renekton"  , hechizo = "RenektonSliceAndDice"},
+        { nombre = "Sejuani"   , hechizo = "SejuaniArcticAssault"}, 
+        { nombre = "Shen"      , hechizo = "ShenShadowDash"      },
+        { nombre = "Tristana"  , hechizo = "RocketJump"          },
+        { nombre = "Tryndamere", hechizo = "slashCast"           }
+    }
+    TextosMatar = {}
+    ListaTextos = { "W+E+R", "E+R", "W+R", "W+E", "R", "E", "W", "Items", "Harass" }
+    TextosEsperar = {}
+    InterrumpirJuego = {}
+    InterrumpirCompleto = {
+        { nombre = "Caitlyn"     , hechizo = "CaitlynAceintheHole"},
+        { nombre = "FiddleSticks", hechizo = "Crowstorm"},
+        { nombre = "FiddleSticks", hechizo = "DrainChannel"},
+        { nombre = "Galio"       , hechizo = "GalioIdolOfDurand"},
+        { nombre = "Karthus"     , hechizo = "FallenOne"},
+        { nombre = "Katarina"    , hechizo = "KatarinaR"},
+        { nombre = "Lucian"      , hechizo = "LucianR"},
+        { nombre = "Malzahar"    , hechizo = "AlZaharNetherGrasp"},
+        { nombre = "MissFortune" , hechizo = "MissFortuneBulletTime"},
+        { nombre = "Nunu"        , hechizo = "AbsoluteZero"},
+        { nombre = "Pantheon"    , hechizo = "Pantheon_GrandSkyfall_Jump"},
+        { nombre = "Shen"        , hechizo = "ShenStandUnited"},
+        { nombre = "Urgot"       , hechizo = "UrgotSwap2"},
+        { nombre = "Varus"       , hechizo = "VarusQ"},
+        { nombre = "Velkoz"      , hechizo = "VelkozR"},
+        { nombre = "Warwick"     , hechizo = "InfiniteDuress"}
+    }
+    local EquipoEnemigo = GetEnemyHeroes()
+    for i, enemigo in pairs(EquipoEnemigo) do
+        for j, campeon in pairs(InterrumpirCompleto) do
+            if enemigo.charName == campeon.nombre then
+                table.insert(InterrumpirJuego, campeon.hechizo)
+            end
+        end
+        for h, gapcloserunit in pairs(Acercadores) do
+            if enemigo.charName == gapcloserunit.nombre then
+                table.insert(AcercadoresJuego, gapcloserunit.hechizo)
+            end
         end
     end
-    for h, gapcloserunit in pairs(Acercadores) do
-        if enemigo.charName == gapcloserunit.nombre then
-            table.insert(AcercadoresJuego, gapcloserunit.hechizo)
-        end
+
+    if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
+        castigo = SUMMONER_1
+    elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
+        castigo = SUMMONER_2
     end
-end
 
-if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
-    castigo = SUMMONER_1
-elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
-    castigo = SUMMONER_2
-end
-
-for k=1, heroManager.iCount do
-    TextosEsperar[k] = k * 3
-end
+    for k=1, heroManager.iCount do
+        TextosEsperar[k] = k * 3
+    end
 end
 
 function CargarPredicciones()
@@ -215,6 +215,7 @@ function Menu()
     TristyMenu:addSubMenu("Keys", "keys")
     TristyMenu.keys:addParam("ComboKey", "SBTW Key (Space)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
     TristyMenu.keys:addParam("HarassKey", "Harass with E (C)", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+    TristyMenu.keys:addParam("HarassToggle", "Harass Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("L"))
     TristyMenu.keys:addParam("info1", "Request more keys!", SCRIPT_PARAM_INFO, "")
 
     TristyMenu:addSubMenu("Drawing", "draw")
@@ -245,10 +246,10 @@ function OnTick()
             Combo()
             UsarObjetos()
         end
-        if TristyMenu.keys.HarassKey then
+        if TristyMenu.keys.HarassKey or TristyMenu.keys.HarassToggle then
             Harass()
         end
-        SOWi:ForceTarget(Target)
+        --SOWi:ForceTarget(Target)
     end
 end
 
@@ -274,53 +275,53 @@ function OnDraw()
         end
 
         if TristyMenu.combo.wSettings.drawNumberOfEnemies and Target ~= nil then
-local barPos = WorldToScreen(D3DXVECTOR3(Target.x, Target.y, Target.z)) --(Credit to Zikkah)
-local PosX = barPos.x - 35
-local PosY = barPos.y - 10
-DrawText(tostring(CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)), 25, PosX, PosY, ARGB(255, 255, 204, 0))
-end
-
-if TristyMenu.draw.drawWslowRange and Wlista then
-    local TristVector = Vector(myHero.x, myHero.z)
-    local RatonVector = Vector(mousePos.x, mousePos.z)
-    local wDrawOffset = 50
-    if GetDistance(TristVector, RatonVector) < rangoW - wDrawOffset then
-        DrawCircle(mousePos.x, mousePos.y, mousePos.z, anchoW, RGB(190, 155, 151))
-    else
-        local BordeDraw = TristVector+(RatonVector-TristVector):normalized() * (rangoW - wDrawOffset)
-        DrawCircle(BordeDraw.x, myHero.y, BordeDraw.y, anchoW, RGB(190, 155, 151))
-    end
-end
-
-
-if TristyMenu.draw.drawErange then
-    DrawCircle(myHero.x, myHero.y, myHero.z, rangoE, ARGB(255, 0, 0, 255))
-end
-
-if TristyMenu.draw.drawRrange then
-    DrawCircle(myHero.x, myHero.y, myHero.z, rangoR, ARGB(255, 255, 255, 255))
-end
-
-if TristyMenu.draw.drawDFGrange then
-    DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.items.rangeToDFG, ARGB(255, 255, 255, 0))
-end
-
-if TristyMenu.draw.drawKtext then
-    for i=1, heroManager.iCount do
-        local objetivo = heroManager:GetHero(i)
-        if ValidTarget(objetivo, 3500) and objetivo ~= nil and TextosEsperar[i] == 1 then
-            PrintFloatText(objetivo, 0, ListaTextos[TextosMatar[i]])
+            local barPos = WorldToScreen(D3DXVECTOR3(Target.x, Target.y, Target.z))
+            local PosX = barPos.x - 35
+            local PosY = barPos.y - 10
+            DrawText(tostring(CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)), 25, PosX, PosY, ARGB(255, 255, 204, 0))
         end
-        if ValidTarget(objetivo, 2000) then
-            if TextosEsperar[i] == 1 then
-                TextosEsperar[i] = 30
+
+        if TristyMenu.draw.drawWslowRange and Wlista then
+            local TristVector = Vector(myHero.x, myHero.z)
+            local RatonVector = Vector(mousePos.x, mousePos.z)
+            local wDrawOffset = 50
+            if GetDistance(TristVector, RatonVector) < rangoW - wDrawOffset then
+                DrawCircle(mousePos.x, mousePos.y, mousePos.z, anchoW, RGB(190, 155, 151))
             else
-                TextosEsperar[i] = TextosEsperar[i] - 1
+                local BordeDraw = TristVector+(RatonVector-TristVector):normalized() * (rangoW - wDrawOffset)
+                DrawCircle(BordeDraw.x, myHero.y, BordeDraw.y, anchoW, RGB(190, 155, 151))
+            end
+        end
+
+
+        if TristyMenu.draw.drawErange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, rangoE, ARGB(255, 0, 0, 255))
+        end
+
+        if TristyMenu.draw.drawRrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, rangoR, ARGB(255, 255, 255, 255))
+        end
+
+        if TristyMenu.draw.drawDFGrange then
+            DrawCircle(myHero.x, myHero.y, myHero.z, TristyMenu.items.rangeToDFG, ARGB(255, 255, 255, 0))
+        end
+
+        if TristyMenu.draw.drawKtext then
+            for i=1, heroManager.iCount do
+                local objetivo = heroManager:GetHero(i)
+                if ValidTarget(objetivo, 3500) and objetivo ~= nil and TextosEsperar[i] == 1 then
+                    PrintFloatText(objetivo, 0, ListaTextos[TextosMatar[i]])
+                end
+                if ValidTarget(objetivo, 2000) then
+                    if TextosEsperar[i] == 1 then
+                        TextosEsperar[i] = 30
+                    else
+                        TextosEsperar[i] = TextosEsperar[i] - 1
+                    end
+                end
             end
         end
     end
-end
-end
 end
 
 function Chequeos()
@@ -388,8 +389,8 @@ end
 
 function ActualizarRangos()
 
-    rangoE = 600 + 9 * (myHero.level - 1)
-    rangoR = 600 + 9 * (myHero.level - 1)
+    rangoE = 550 + 9 * (myHero.level - 1)
+    rangoR = 550 + 9 * (myHero.level - 1)
 
 end
 

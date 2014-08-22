@@ -1,49 +1,47 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = "0.10"
+local version = "0.11"
 
 if myHero.charName ~= "Tristana" then return end
 
---Auto Update - Credits Honda7--
 
 local DaPipexTristUpdate = true
-local UPDATE_SCRIPT_NAME = "TristanitaMola"
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/DaPipex/BoL_Scripts/master/TristanitaMola.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
-local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+local SourceLibURL = "https://raw.github.com/TheRealSource/public/master/common/SourceLib.lua"
+local SourceLibPath = LIB_PATH.."SourceLib.lua"
+local DownloadingSourceLib = false
 
-function AutoupdaterMsg(msg) print("<font color=\"#FF0000\">"..UPDATE_SCRIPT_NAME..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
-if DaPipexTristUpdate then
-    local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
-    if ServerData then
-        local ServerVersion = string.match(ServerData, "local version = \"%d+.%d+\"")
-        ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
-        if ServerVersion then
-            ServerVersion = tonumber(ServerVersion)
-            if tonumber(version) < ServerVersion then
-                AutoupdaterMsg("New version available "..ServerVersion)
-                AutoupdaterMsg("Updating, please don't press F9")
-                DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)  
-            else
-                AutoupdaterMsg("You have got the latest version ("..ServerVersion..") Check post for changelog!")
-            end
-        end
-    else
-        AutoupdaterMsg("Error downloading version info")
-    end
+if FileExist(SourceLibPath) then
+    require "SourceLib"
+    DownloadingSourceLib = false
+else
+    DownloadingSourceLib = true
+    DownloadFile(SourceLibURL, SourceLibPath, function() PrintChat("SourceLib downloaded, please reload (Double F9)") end)
 end
 
---End credits - Honda 7--
+if DownloadingSourceLib == true then
+    PrintChat("SourceLib is being downloaded, please wait.")
+    return
+end
+
+if DaPipexTristUpdate then
+    SourceUpdater("TristanitaMola", version, "raw.github.com", "/DaPipex/BoL_Scripts/master/TristanitaMola.lua", SCRIPT_PATH..GetCurrentEnv().FILE_NAME):CheckUpdate()
+end
+
+local RequireSL = Require("Tristanita Libs")
+RequireSL:Add("VPrediction", "https://raw.githubusercontent.com/Hellsing/BoL/master/common/VPrediction.lua")
+RequireSL:Add("SOW", "https://raw.githubusercontent.com/Hellsing/BoL/master/common/SOW.lua")
+
+RequireSL:Check()
+
+if RequireSL.downloadNeeded == true then return end
+
 
 if VIP_USER then
     VPredActive = true
 else
     VPredActive = false
 end
-require "VPrediction"
-require "SOW"
 
 
 function OnLoad()
@@ -68,11 +66,12 @@ function Variables()
     castigo = nil
     ts = nil
     SOWi = nil
+    STS = nil
     currentHealth = ((myHero.health * 100) / myHero.maxHealth)
     tablaWenemigos = {"Always Use", "1 or more", "2 or more", "3 or more", "4 or more"}
 
-    EspadaDelChoro, CurvedPenis, GarraIgnea = nil, nil, nil
-    BOTRKlisto, BClisto, DFGlisto = nil, nil, nil
+    EspadaDelChoro, CurvedPenis, GarraIgnea, AntorchaNegra, RapiditoAtaco = nil, nil, nil, nil, nil
+    BOTRKlisto, BClisto, DFGlisto, BFTlisto, YMGlisto = nil, nil, nil, nil, nil
     AcercadoresJuego = {}
     Acercadores = {
         { nombre = "Akali"     , hechizo = "AkaliShadowDance"    },
@@ -165,7 +164,7 @@ function CargarPredicciones()
 
     VP = VPrediction()
     SOWi = SOW(VP)
-    SOWi:LoadToMenu(TristyMenu.orbw)
+    SOWi:LoadToMenu(TristyMenu.orbw, STSp)
 
     loadDone = true
 
@@ -174,6 +173,8 @@ end
 
 function Menu()
 
+    STSp = SimpleTS(STS_PRIORITY_LESS_CAST_PHYSICAL)
+
     TristyMenu = scriptConfig("Tristanita Mola by DaPipex", "tristymola")
 
     TristyMenu:addSubMenu("Orbwalking", "orbw")
@@ -181,6 +182,7 @@ function Menu()
     TristyMenu:addSubMenu("SBTW", "combo")
     TristyMenu.combo:addParam("useQ", "Use Q in combo", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.combo:addParam("rangeToQ", "Range to use Q", SCRIPT_PARAM_SLICE, 350, 350, 700, 0)
+    TristyMenu.combo:addParam("adjustQauto", "Auto adjust Q range", SCRIPT_PARAM_ONOFF, false)
     TristyMenu.combo:addParam("useW", "Use W in combo", SCRIPT_PARAM_ONOFF, false)
 
     TristyMenu.combo:addSubMenu("W Options", "wSettings")
@@ -203,6 +205,7 @@ function Menu()
     TristyMenu.items:addParam("itemsG", "Want to use items in combo?", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useBOTRK", "Use Ruined king", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useBC", "Use Bilgewater Cutlass", SCRIPT_PARAM_ONOFF, true)
+    TristyMenu.items:addParam("useYMG", "Use Yomuu's Ghostblade", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useDFG", "Use DeathFire Grasp", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("useBFT", "Use Black Fire Torch", SCRIPT_PARAM_ONOFF, true)
     TristyMenu.items:addParam("rangeToDFG", "Range to use DFG or BFT", SCRIPT_PARAM_SLICE, 500, 100, 750, 0)
@@ -228,9 +231,13 @@ function Menu()
     TristyMenu.draw:addParam("drawDFGrange", "Draw DFG/BFT Range", SCRIPT_PARAM_ONOFF, false)
     TristyMenu.draw:addParam("drawKtext", "Draw Kill text", SCRIPT_PARAM_ONOFF, true)
 
-    ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, rangoW)
-    ts.name = "Tristanita"
-    TristyMenu:addTS(ts)
+    TristyMenu:addSubMenu("Extras", "extras")
+    TristyMenu.extras:addParam("usecustomskin", "Use new skin?", SCRIPT_PARAM_ONOFF, false)
+    TristyMenu.extras:addParam("customskin", "Choose skin", SCRIPT_PARAM_SLICE, 0, 0, 6, 0)
+
+    TristyMenu:addSubMenu("Simple Target Selector", "sts")
+    STSp:AddToMenu(TristyMenu.sts)
+
 
 end
 
@@ -242,6 +249,13 @@ function OnTick()
         ActualizarRangos()
         Killsteal()
         CalculoDeDano()
+
+        if TristyMenu.extras.usecustomskin then
+            GenModelPacket("Tristana", TristyMenu.extras.customskin)
+        end
+        if TristyMenu.combo.adjustQauto then
+            AdjustQRange()
+        end
         if TristyMenu.keys.ComboKey then
             Combo()
             UsarObjetos()
@@ -249,7 +263,6 @@ function OnTick()
         if TristyMenu.keys.HarassKey or TristyMenu.keys.HarassToggle then
             Harass()
         end
-        --SOWi:ForceTarget(Target)
     end
 end
 
@@ -338,14 +351,16 @@ function Chequeos()
     CurvedPenis = GetInventorySlotItem(3144)
     GarraIgnea = GetInventorySlotItem(3128)
     AntorchaNegra = GetInventorySlotItem(3188)
+    RapiditoAtaco = GetInventorySlotItem(3142)
 
     BOTRKlisto = (EspadaDelChoro ~= nil and myHero:CanUseSpell(EspadaDelChoro) == READY)
     BClisto = (CurvedPenis ~= nil and myHero:CanUseSpell(CurvedPenis) == READY)
     DFGlisto = (GarraIgnea ~= nil and myHero:CanUseSpell(GarraIgnea) == READY)
     BFTlisto = (AntorchaNegra ~= nil and myHero:CanUseSpell(AntorchaNegra) == READY)
+    YMGlisto = (RapiditoAtaco ~= nil and myHero:CanUseSpell(RapiditoAtaco) == READY)
 
-    ts:update()
-    Target = ts.target
+    Target = STSp:GetTarget(rangoW)
+
 
 end
 
@@ -389,8 +404,8 @@ end
 
 function ActualizarRangos()
 
-    rangoE = 550 + 9 * (myHero.level - 1)
-    rangoR = 550 + 9 * (myHero.level - 1)
+    rangoE = 600 + 9 * (myHero.level - 1)
+    rangoR = 600 + 9 * (myHero.level - 1)
 
 end
 
@@ -493,6 +508,12 @@ function UsarObjetos()
             CastSpell(AntorchaNegra, Target)
         end
     end
+
+    if TristyMenu.items.useYMG and (GetDistance(Target) < (SOWi:MyRange() - 100)) then
+        if YMGlisto then
+            CastSpell(RapiditoAtaco)
+        end
+    end
 end
 
 function InterrumpirMenu()
@@ -521,11 +542,11 @@ function OnProcessSpell(unit, spell)
         for i, habilidadGC in pairs(AcercadoresJuego) do
             if spell.name == habilidadGC and (unit.team ~= myHero.team) and TristyMenu.agc[habilidadGC] then
                 if GetDistance(spell.endPos) <= 275 and (myHero.health <= ((TristyMenu.agc.minHPagc / 100) * myHero.maxHealth)) then
-                    CastSpell(_R, unit)
-                end 
-            end
+                CastSpell(_R, unit)
+            end 
         end
     end
+end
 end
 
 function CalculoDeDano()
@@ -592,3 +613,34 @@ function CountEnemyHeroInRangeOfHero(range, hero)
     end
     return WachosInRange
 end
+
+function AdjustQRange()
+
+    TristyMenu.combo.rangeToQ = SOWi:MyRange() - 100
+
+end
+
+function GenModelPacket(champ, skinId)
+    p = CLoLPacket(0x97)
+    p:EncodeF(myHero.networkID)
+    p.pos = 1
+    t1 = p:Decode1()
+    t2 = p:Decode1()
+    t3 = p:Decode1()
+    t4 = p:Decode1()
+    p:Encode1(t1)
+    p:Encode1(t2)
+    p:Encode1(t3)
+    p:Encode1(bit32.band(t4,0xB))
+    p:Encode1(1)--hardcode 1 bitfield
+    p:Encode4(skinId)
+    for i = 1, #champ do
+        p:Encode1(string.byte(champ:sub(i,i)))
+    end
+    for i = #champ + 1, 64 do
+        p:Encode1(0)
+    end
+    p:Hide()
+    RecvPacket(p)
+end
+

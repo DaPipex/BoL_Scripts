@@ -1,9 +1,20 @@
 --[[Pos que tristanita ap mola
 by DaPipex]]
 
-local version = "0.11"
+local version = "0.12"
 
 if myHero.charName ~= "Tristana" then return end
+
+-- These variables need to be near the top of your script so you can call them in your callbacks.
+HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
+-- DO NOT CHANGE. This is set to your proper ID.
+id = 291
+
+-- CHANGE ME. Make this the exact same name as the script you added into the site!
+ScriptName = "TristanitaMola"
+
+-- Thank you to Roach and Bilbao for the support!
+assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIDAAAAJQAAAAgAAIAfAIAAAQAAAAQKAAAAVXBkYXRlV2ViAAEAAAACAAAADAAAAAQAETUAAAAGAUAAQUEAAB2BAAFGgUAAh8FAAp0BgABdgQAAjAHBAgFCAQBBggEAnUEAAhsAAAAXwAOAjMHBAgECAgBAAgABgUICAMACgAEBgwIARsNCAEcDwwaAA4AAwUMDAAGEAwBdgwACgcMDABaCAwSdQYABF4ADgIzBwQIBAgQAQAIAAYFCAgDAAoABAYMCAEbDQgBHA8MGgAOAAMFDAwABhAMAXYMAAoHDAwAWggMEnUGAAYwBxQIBQgUAnQGBAQgAgokIwAGJCICBiIyBxQKdQQABHwCAABcAAAAECAAAAHJlcXVpcmUABAcAAABzb2NrZXQABAcAAABhc3NlcnQABAQAAAB0Y3AABAgAAABjb25uZWN0AAQQAAAAYm9sLXRyYWNrZXIuY29tAAMAAAAAAABUQAQFAAAAc2VuZAAEGAAAAEdFVCAvcmVzdC9uZXdwbGF5ZXI/aWQ9AAQHAAAAJmh3aWQ9AAQNAAAAJnNjcmlwdE5hbWU9AAQHAAAAc3RyaW5nAAQFAAAAZ3N1YgAEDQAAAFteMC05QS1aYS16XQAEAQAAAAAEJQAAACBIVFRQLzEuMA0KSG9zdDogYm9sLXRyYWNrZXIuY29tDQoNCgAEGwAAAEdFVCAvcmVzdC9kZWxldGVwbGF5ZXI/aWQ9AAQCAAAAcwAEBwAAAHN0YXR1cwAECAAAAHBhcnRpYWwABAgAAAByZWNlaXZlAAQDAAAAKmEABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQA1AAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAMAAAADAAAAAwAAAAMAAAAEAAAABAAAAAUAAAAFAAAABQAAAAYAAAAGAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAgAAAAHAAAABQAAAAgAAAAJAAAACQAAAAkAAAAKAAAACgAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAMAAAACwAAAAkAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAGAAAAAgAAAGEAAAAAADUAAAACAAAAYgAAAAAANQAAAAIAAABjAAAAAAA1AAAAAgAAAGQAAAAAADUAAAADAAAAX2EAAwAAADUAAAADAAAAYWEABwAAADUAAAABAAAABQAAAF9FTlYAAQAAAAEAEAAAAEBvYmZ1c2NhdGVkLmx1YQADAAAADAAAAAIAAAAMAAAAAAAAAAEAAAAFAAAAX0VOVgA="), nil, "bt", _ENV))()
 
 
 local DaPipexTristUpdate = true
@@ -37,12 +48,6 @@ RequireSL:Check()
 if RequireSL.downloadNeeded == true then return end
 
 
-if VIP_USER then
-    VPredActive = true
-else
-    VPredActive = false
-end
-
 
 function OnLoad()
 
@@ -54,15 +59,28 @@ function OnLoad()
     InterrumpirMenu()
     GapCloserMenu()
 
+    UpdateWeb(true, ScriptName, id, HWID)
+
+end
+
+function OnBugsplat()
+
+    UpdateWeb(false, ScriptName, id, HWID)
+
+end
+
+function OnUnload()
+
+    UpdateWeb(false, ScriptName, id, HWID)
+
 end
 
 function Variables()
 
     rangoW, rangoE, rangoR = 900, 600, 600
     Qlista, Wlista, Elista, Rlista = false, false, false, false
-    anchoW, velocidadW, demoraW = 270, 20, .5
+    anchoW, velocidadW, demoraW = 270, 20, .25
     VP = nil
-    freePredW = nil
     castigo = nil
     ts = nil
     SOWi = nil
@@ -155,12 +173,7 @@ end
 
 function CargarPredicciones()
 
-    if VPredActive == true then
-        PrintChat("<font color='#FF9A00'>Pos que Tristanita Mola: "..version.." VPrediction version Loaded!</font>")
-    else
-        freePredW = TargetPrediction(rangoW, velocidadW, demoraW, anchoW)
-        PrintChat("<font color='#FF9A00'>Pos que Tristanita Mola: "..version.." Free prediction version Loaded!</font>")
-    end
+    PrintChat("<font color='#FF9A00'>Pos que Tristanita Mola: version "..version.." Loaded!</font>")
 
     VP = VPrediction()
     SOWi = SOW(VP)
@@ -251,7 +264,10 @@ function OnTick()
         CalculoDeDano()
 
         if TristyMenu.extras.usecustomskin then
-            GenModelPacket("Tristana", TristyMenu.extras.customskin)
+            if CambioSkin() then
+                GenModelPacket("Tristana", TristyMenu.extras.customskin)
+                lastSkin = TristyMenu.extras.customskin
+            end
         end
         if TristyMenu.combo.adjustQauto then
             AdjustQRange()
@@ -262,6 +278,9 @@ function OnTick()
         end
         if TristyMenu.keys.HarassKey or TristyMenu.keys.HarassToggle then
             Harass()
+        end
+        if GetGame().isOver then
+            loadDone = false
         end
     end
 end
@@ -413,19 +432,11 @@ function CastSpecialW()
 
     local wachosAlrededor = CountEnemyHeroInRangeOfHero(TristyMenu.combo.wSettings.sliderWrange, Target)
 
-    if VPredActive then
-        local CastPosition, HitChance, Position = VP:GetCircularCastPosition(Target, demoraW, anchoW, rangoW, velocidadW, myHero, false)
-        if HitChance >= 1 and (GetDistance(CastPosition) < rangoW) then
-            if (wachosAlrededor < (TristyMenu.combo.wSettings.maxWenemies - 1)) or ((TristyMenu.combo.wSettings.maxWenemies - 1) == 0) then
-                CastSpell(_W, CastPosition.x, CastPosition.z)
-            end
-        end
-    else
-        local Position = freePredW:GetPrediction(Target)
-        if GetDistance(Position) < rangoW then
-            if (wachosAlrededor < (TristyMenu.combo.wSettings.maxWenemies - 1)) or ((TristyMenu.combo.wSettings.maxWenemies - 1) == 0) then
-                CastSpell(_W, Position.x, Position.z)
-            end
+    
+    local CastPosition, HitChance, Position = VP:GetCircularCastPosition(Target, demoraW, anchoW, rangoW, velocidadW, myHero, false)
+    if HitChance >= 1 and (GetDistance(CastPosition) < rangoW) then
+        if (wachosAlrededor < (TristyMenu.combo.wSettings.maxWenemies - 1)) or ((TristyMenu.combo.wSettings.maxWenemies - 1) == 0) then
+            CastSpell(_W, CastPosition.x, CastPosition.z)
         end
     end
 end
@@ -467,16 +478,10 @@ end
 function CastKSw(target)
 
     if target ~= nil then
-        if VPredActive then
-            local CastPosition, HitChance, Position = VP:GetCircularCastPosition(target, demoraW, anchoW, rangoW, velocidadW, myHero, false)
-            if HitChance >= 1 and (GetDistance(CastPosition) < rangoW) then
-                CastSpell(_W, CastPosition.x, CastPosition.z)
-            end
-        else
-            local Position = freePredW:GetPrediction(target)
-            if GetDistance(Position) < rangoW then
-                CastSpell(_W, Position.x, Position.z)
-            end
+
+        local CastPosition, HitChance, Position = VP:GetCircularCastPosition(target, demoraW, anchoW, rangoW, velocidadW, myHero, false)
+        if HitChance >= 1 and (GetDistance(CastPosition) < rangoW) then
+            CastSpell(_W, CastPosition.x, CastPosition.z)
         end
     end
 end
@@ -644,3 +649,6 @@ function GenModelPacket(champ, skinId)
     RecvPacket(p)
 end
 
+function CambioSkin()
+    return TristyMenu.extras.customskin ~= lastSkin
+end

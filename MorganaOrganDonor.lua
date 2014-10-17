@@ -2,7 +2,7 @@
 the organ donor by DaPipex
 DaPipex]]
 
-local version = "0.3"
+local version = "0.4"
 
 if myHero.charName ~= "Morgana" then return end
 
@@ -42,8 +42,9 @@ end
 local RequireSL = Require("mORGANa Libs")
 RequireSL:Add("VPrediction", "https://raw.githubusercontent.com/Hellsing/BoL/master/common/VPrediction.lua")
 RequireSL:Add("SOW", "https://raw.githubusercontent.com/Hellsing/BoL/master/common/SOW.lua")
-RequireSL:Add("Prodiction", "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/ec830facccefb3b52212dba5696c08697c3c2854/Test/Prodiction/Prodiction.lua")
-
+if VIP_USER then
+	RequireSL:Add("Prodiction", "https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/ec830facccefb3b52212dba5696c08697c3c2854/Test/Prodiction/Prodiction.lua")
+end
 RequireSL:Check()
 
 if RequireSL.downloadNeeded == true then return end

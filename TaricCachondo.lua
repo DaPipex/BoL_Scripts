@@ -4,7 +4,7 @@ by
 DaPipex
 --]]
 
-local version = "1.0"
+local version = "1.1"
 
 if myHero.charName ~= "Taric" then return end
 
@@ -61,6 +61,20 @@ function OnLoad()
 	ExtrasMenu()
 
 	PrintChat("<font color='#19DEDB'>Taric, el caballero cachondo Loaded!</font>")
+
+	UpdateWeb(true, ScriptName, id, HWID)
+
+end
+
+function OnUnload()
+
+	UpdateWeb(false, ScriptName, id, HWID)
+
+end
+
+function OnBugsplat()
+
+	UpdateWeb(false, ScriptName, id, HWID)
 
 end
 
@@ -136,6 +150,9 @@ function TaricMenu()
 
 	Machote:addSubMenu("Orbwalking", "orbw")
 	SOWi:LoadToMenu(Machote.orbw, STSta)
+
+	Machote:addSubMenu("Simple Target Selector", "sts")
+	STSta:AddToMenu(Machote.sts)
 
 	Machote:addSubMenu("Keys", "keys")
 	Machote.keys:addParam("combo", "All-In Combo (Space)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
@@ -230,6 +247,10 @@ function OnTick()
 
 		if Machote.heal.autoHealMe or Machote.heal.autoHealOthers then
 			AmbulanciaCachonda()
+		end
+
+		if GetGame().isOver then
+			UpdateWeb(false, ScriptName, id, HWID)
 		end
 
 	end
@@ -485,4 +506,8 @@ function OnDraw()
 			end
 		end
 	end
+end
+
+function CambioSkin()
+	return Machote.extras.chooseSkin ~= lastSkin
 end

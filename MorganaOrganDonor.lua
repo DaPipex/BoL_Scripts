@@ -2,9 +2,9 @@
 the organ donor by DaPipex
 DaPipex]]
 
-local version = "0.2"
+local version = "0.3"
 
-if myHero.charName ~= "Morgana" or not VIP_USER then return end
+if myHero.charName ~= "Morgana" then return end
 
 -- These variables need to be near the top of your script so you can call them in your callbacks.
 HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))

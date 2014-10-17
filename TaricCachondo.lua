@@ -1,72 +1,97 @@
---[[Taric, el caballero cachondo
+--[[
+Taric, el caballero cachondo
 by
-DaPipex]]
+DaPipex
+--]]
 
-local version = "0.03"
+local version = "1.0"
 
 if myHero.charName ~= "Taric" then return end
 
---Auto Update - Credits Honda7--
+-- These variables need to be near the top of your script so you can call them in your callbacks.
+HWID = Base64Encode(tostring(os.getenv("PROCESSOR_IDENTIFIER")..os.getenv("USERNAME")..os.getenv("COMPUTERNAME")..os.getenv("PROCESSOR_LEVEL")..os.getenv("PROCESSOR_REVISION")))
+-- DO NOT CHANGE. This is set to your proper ID.
+id = 291
+
+-- CHANGE ME. Make this the exact same name as the script you added into the site!
+ScriptName = "TaricCachondo"
+
+-- Thank you to Roach and Bilbao for the support!
+assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIDAAAAJQAAAAgAAIAfAIAAAQAAAAQKAAAAVXBkYXRlV2ViAAEAAAACAAAADAAAAAQAETUAAAAGAUAAQUEAAB2BAAFGgUAAh8FAAp0BgABdgQAAjAHBAgFCAQBBggEAnUEAAhsAAAAXwAOAjMHBAgECAgBAAgABgUICAMACgAEBgwIARsNCAEcDwwaAA4AAwUMDAAGEAwBdgwACgcMDABaCAwSdQYABF4ADgIzBwQIBAgQAQAIAAYFCAgDAAoABAYMCAEbDQgBHA8MGgAOAAMFDAwABhAMAXYMAAoHDAwAWggMEnUGAAYwBxQIBQgUAnQGBAQgAgokIwAGJCICBiIyBxQKdQQABHwCAABcAAAAECAAAAHJlcXVpcmUABAcAAABzb2NrZXQABAcAAABhc3NlcnQABAQAAAB0Y3AABAgAAABjb25uZWN0AAQQAAAAYm9sLXRyYWNrZXIuY29tAAMAAAAAAABUQAQFAAAAc2VuZAAEGAAAAEdFVCAvcmVzdC9uZXdwbGF5ZXI/aWQ9AAQHAAAAJmh3aWQ9AAQNAAAAJnNjcmlwdE5hbWU9AAQHAAAAc3RyaW5nAAQFAAAAZ3N1YgAEDQAAAFteMC05QS1aYS16XQAEAQAAAAAEJQAAACBIVFRQLzEuMA0KSG9zdDogYm9sLXRyYWNrZXIuY29tDQoNCgAEGwAAAEdFVCAvcmVzdC9kZWxldGVwbGF5ZXI/aWQ9AAQCAAAAcwAEBwAAAHN0YXR1cwAECAAAAHBhcnRpYWwABAgAAAByZWNlaXZlAAQDAAAAKmEABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQA1AAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAMAAAADAAAAAwAAAAMAAAAEAAAABAAAAAUAAAAFAAAABQAAAAYAAAAGAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAgAAAAHAAAABQAAAAgAAAAJAAAACQAAAAkAAAAKAAAACgAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAMAAAACwAAAAkAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAGAAAAAgAAAGEAAAAAADUAAAACAAAAYgAAAAAANQAAAAIAAABjAAAAAAA1AAAAAgAAAGQAAAAAADUAAAADAAAAX2EAAwAAADUAAAADAAAAYWEABwAAADUAAAABAAAABQAAAF9FTlYAAQAAAAEAEAAAAEBvYmZ1c2NhdGVkLmx1YQADAAAADAAAAAIAAAAMAAAAAAAAAAEAAAAFAAAAX0VOVgA="), nil, "bt", _ENV))()
+
 
 local DaPipexTaricUpdate = true
-local UPDATE_SCRIPT_NAME = "TaricCachondo"
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/DaPipex/BoL_Scripts/master/TaricCachondo.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
-local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+local SourceLibURL = "https://raw.github.com/TheRealSource/public/master/common/SourceLib.lua"
+local SourceLibPath = LIB_PATH.."SourceLib.lua"
+local DownloadingSourceLib = false
 
-function AutoupdaterMsg(msg) print("<font color=\"#FF0000\">"..UPDATE_SCRIPT_NAME..":</font> <font color=\"#FFFFFF\">"..msg..".</font>") end
-if DaPipexTaricUpdate then
-	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
-	if ServerData then
-		local ServerVersion = string.match(ServerData, "local version = \"%d+.%d+\"")
-		ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
-		if ServerVersion then
-			ServerVersion = tonumber(ServerVersion)
-			if tonumber(version) < ServerVersion then
-				AutoupdaterMsg("New version available "..ServerVersion)
-				AutoupdaterMsg("Updating, please don't press F9")
-				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)  
-			else
-				AutoupdaterMsg("You have got the latest version ("..ServerVersion..") Check post for changelog!")
-			end
-		end
-	else
-		AutoupdaterMsg("Error downloading version info")
-	end
+if FileExist(SourceLibPath) then
+	require "SourceLib"
+	DownloadingSourceLib = false
+else
+	DownloadingSourceLib = true
+	DownloadFile(SourceLibURL, SourceLibPath, function() PrintChat("SourceLib downloaded, please reload (Double F9)") end)
 end
 
---End credits - Honda 7--
+if DownloadingSourceLib == true then
+	PrintChat("SourceLib is being downloaded, please wait.")
+	return
+end
 
-require "VPrediction"
-require "SOW"
+if DaPipexTaricUpdate then
+	SourceUpdater("TaricCachondo", version, "raw.github.com", "/DaPipex/BoL_Scripts/master/TaricCachondo.lua", SCRIPT_PATH..GetCurrentEnv().FILE_NAME):CheckUpdate()
+end
+
+local RequireSL = Require("Taric Libs")
+RequireSL:Add("VPrediction", "https://raw.githubusercontent.com/Hellsing/BoL/master/common/VPrediction.lua")
+RequireSL:Add("SOW", "https://raw.githubusercontent.com/Hellsing/BoL/master/common/SOW.lua")
+
+RequireSL:Check()
+
+if RequireSL.downloadNeeded == true then return end
+
+
 
 function OnLoad()
 
 	loadDone = false
 
-	Variables()
+	TaricVars()
 	TaricMenu()
-	InterrumpirMenu()
-	DelayAction(Mensajito, 2)
+	ExtrasMenu()
+
+	PrintChat("<font color='#19DEDB'>Taric, el caballero cachondo Loaded!</font>")
 
 end
 
-function Variables()
-	numbersTable = { "1", "2", "3", "4", "5" }
-	Qlista, Wlista, Elista, Rlista = false, false, false, false
-	rangoQ, rangoW, rangoE, rangoR = 750, 400, 625, 400
+function TaricVars()
+
+	HechizoQ = { rango = 750 }
+	HechizoW = { rango = 400, demora = 0.25 }
+	HechizoE = { rangoMax = 625, rangoMin = 1 }
+	HechizoR = { rango = 400 }
+
+	VP, SOWi, STSta = nil, nil, nil
+
+	Qlista, Wlista, Elista, Rlista, Ilista = false, false, false, false, false
+
+	castigo = nil
+
+	tiempoAnimacion = 0
+
 	VP = VPrediction()
 	SOWi = SOW(VP)
-	ts = nil
-	castigo = nil
-	tieneBuff = false
-	tiempoAnimacion = 0
-	author = "DaPipex"
+	STSta = SimpleTS(STS_PRIORITY_LESS_CAST_MAGIC)
+
 
 	TextosMatar = {}
-	ListaTextos = { "W+E+R", "E+R", "W+R", "W+E", "R", "E", "W", "Harass"}
+	ListaTextos = { "W+E+R", "E+R", "W+R", "W+E", "R", "E", "W", "Harass" }
 	TextosEsperar = {}
+
+	for k=1, heroManager.iCount do
+		TextosEsperar[k] = k * 3
+	end
+
 
 	InterrumpirJuego = {}
 	InterrumpirCompleto = {
@@ -90,94 +115,88 @@ function Variables()
 
 	local EquipoEnemigo = GetEnemyHeroes()
 	for i, enemigo in pairs(EquipoEnemigo) do
-		for j, info in pairs(InterrumpirCompleto) do
-			if enemigo.charName == info.nombre then
-				table.insert(InterrumpirJuego, info.hechizo)
+		for j, campeon in pairs(InterrumpirCompleto) do
+			if enemigo.charName == campeon.nombre then
+				table.insert(InterrumpirJuego, campeon.hechizo)
 			end
 		end
 	end
 
-	if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
+	if myHero:GetSpellData(SUMMONER_1).name:find("summonerdot") then
 		castigo = SUMMONER_1
-	elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
+	elseif myHero:GetSpellData(SUMMONER_2).name:find("summonerdot") then
 		castigo = SUMMONER_2
 	end
 
-	for k=1, heroManager.iCount do
-		TextosEsperar[k] = k * 3
-	end 
 end
 
 function TaricMenu()
 
-	MachoteConfig = scriptConfig("Taric Cachondo", "hermosotaric")
+	Machote = scriptConfig("Taric Cachondo Remade", "GemasCachondas")
 
-	MachoteConfig:addSubMenu("Orbwalking", "orbw")
-	SOWi:LoadToMenu(MachoteConfig.orbw)
+	Machote:addSubMenu("Orbwalking", "orbw")
+	SOWi:LoadToMenu(Machote.orbw, STSta)
 
-	MachoteConfig:addSubMenu("Combo", "combo")
-	MachoteConfig.combo:addSubMenu("Q Settings", "Qinfo")
-	MachoteConfig.combo.Qinfo:addParam("useQ", "Use Q on..", SCRIPT_PARAM_LIST, 3, { "Don't use", "Self", "Lowest ally" })
-	MachoteConfig.combo.Qinfo:addParam("minHPtoHealSelf", "Min % Health to heal self", SCRIPT_PARAM_SLICE, 90, 1, 100, 0)
-	MachoteConfig.combo.Qinfo:addParam("minHPtoHealAlly", "Min % Health to heal ally", SCRIPT_PARAM_SLICE, 90, 1, 100, 0)
-	MachoteConfig.combo.Qinfo:addParam("autoHealAlly", "Auto Heal Ally", SCRIPT_PARAM_ONOFF, false)
-	MachoteConfig.combo.Qinfo:addParam("AHAmin", "Auto Heal Ally min health", SCRIPT_PARAM_SLICE, 90, 1, 100, 0)
+	Machote:addSubMenu("Keys", "keys")
+	Machote.keys:addParam("combo", "All-In Combo (Space)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+	Machote.keys:addParam("SWcombo", "Spell-Weaving Combo", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+	Machote.keys:addParam("harass", "Harass with E", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
 
-	MachoteConfig.combo:addSubMenu("W Settings", "Winfo")
-	MachoteConfig.combo.Winfo:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, false)
-	MachoteConfig.combo.Winfo:addParam("minWenemies", "Min Enemies to use W", SCRIPT_PARAM_LIST, 1, numbersTable)
+	Machote:addSubMenu("SBTW", "sbtw")
 
-	MachoteConfig.combo:addSubMenu("E Settings", "Einfo")
-	MachoteConfig.combo.Einfo:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
-	MachoteConfig.combo.Einfo:addParam("rangeToE", "Range to use E", SCRIPT_PARAM_SLICE, rangoE, 1, rangoE, 0)
+	Machote.sbtw:addSubMenu("Q Settings", "qInfo")
+	Machote.sbtw.qInfo:addParam("useQ", "Use Q", SCRIPT_PARAM_LIST, 3, {"Don't use", "Only on me", "Only on low ally"})
+	Machote.sbtw.qInfo:addParam("useQslider", "Min HP% to heal", SCRIPT_PARAM_SLICE, 75, 1, 100, 0)
 
-	MachoteConfig.combo:addSubMenu("R Settings", "Rinfo")
-	MachoteConfig.combo.Rinfo:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, false)
-	MachoteConfig.combo.Rinfo:addParam("minRenemies", "Min Enemies to use R", SCRIPT_PARAM_LIST, 1, numbersTable)
+	Machote.sbtw:addSubMenu("W Settings", "wInfo")
+	Machote.sbtw.wInfo:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+	Machote.sbtw.wInfo:addParam("useWenemies", "Enemies to use W", SCRIPT_PARAM_SLICE, 1, 1, 5, 0)
 
-	MachoteConfig:addSubMenu("Keys", "keys")
-	MachoteConfig.keys:addParam("comboKey", "Normal Combo [all in] (Space)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-	MachoteConfig.keys:addParam("comboWeavingKey", "Spell Weaving Combo", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
-	MachoteConfig.keys:addParam("harassKey", "Harass with stun", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
+	Machote.sbtw:addSubMenu("E Settings", "eInfo")
+	Machote.sbtw.eInfo:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
+	Machote.sbtw.eInfo:addParam("useEslider", "Range to E", SCRIPT_PARAM_SLICE, HechizoE.rangoMax, HechizoE.rangoMin, HechizoE.rangoMax, 0)
 
-	MachoteConfig:addSubMenu("Interrupt", "inter")
-	MachoteConfig.inter:addParam("info1", "Interrupt with stun:", SCRIPT_PARAM_INFO, "")
+	Machote.sbtw:addSubMenu("R Settings", "rInfo")
+	Machote.sbtw.rInfo:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, true)
+	Machote.sbtw.rInfo:addParam("useRenemies", "Enemies to use R", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
 
-	MachoteConfig:addSubMenu("Items", "items")
-	MachoteConfig.items:addParam("itemsG", "Use items in combo?", SCRIPT_PARAM_ONOFF, false)
+	Machote:addSubMenu("Healing", "heal")
+	Machote.heal:addParam("autoHealMe", "Auto Heal me", SCRIPT_PARAM_ONOFF, false)
+	Machote.heal:addParam("AHMslide", "^ if under %HP", SCRIPT_PARAM_SLICE, 75, 1, 100, 0)
+	Machote.heal:addParam("autoHealOthers", "Auto Heal Others", SCRIPT_PARAM_ONOFF, false)
+	Machote.heal:addParam("AHOslide", "^ if under %HP", SCRIPT_PARAM_SLICE, 75, 1, 100, 0)
 
-	MachoteConfig:addSubMenu("KS", "killsteal")
-	MachoteConfig.killsteal:addParam("ksW", "KS with W", SCRIPT_PARAM_ONOFF, true)
-	MachoteConfig.killsteal:addParam("ksE", "KS with E", SCRIPT_PARAM_ONOFF, true)
-	MachoteConfig.killsteal:addParam("ksR", "KS with R", SCRIPT_PARAM_ONOFF, true)
-	MachoteConfig.killsteal:addParam("ksI", "KS with Ignite", SCRIPT_PARAM_ONOFF, true)
+	Machote:addSubMenu("Interrupt", "inter")
 
-	MachoteConfig:addSubMenu("Drawing", "draw")
-	MachoteConfig.draw:addParam("drawAArange", "Draw AA range", SCRIPT_PARAM_ONOFF, true)
-	MachoteConfig.draw:addParam("drawQrange", "Draw Q range", SCRIPT_PARAM_ONOFF, true)
-	MachoteConfig.draw:addParam("drawWrange", "Draw W range", SCRIPT_PARAM_ONOFF, true)
-	--MachoteConfig.draw:addParam("drawMaxErange", "Draw max E range", SCRIPT_PARAM_ONOFF, true)
-	MachoteConfig.draw:addParam("drawErange", "Draw user-set E range", SCRIPT_PARAM_ONOFF, true)
-	MachoteConfig.draw:addParam("drawRrange", "Draw R range", SCRIPT_PARAM_ONOFF, true)
-	MachoteConfig.draw:addParam("drawKill", "Draw Killable", SCRIPT_PARAM_ONOFF, true)
-	MachoteConfig.draw:addParam("drawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
+	Machote:addSubMenu("Killsteal", "ks")
+	Machote.ks:addParam("ksW", "KS with W", SCRIPT_PARAM_ONOFF, true)
+	Machote.ks:addParam("ksE", "KS with E", SCRIPT_PARAM_ONOFF, false)
+	Machote.ks:addParam("ksR", "KS with R", SCRIPT_PARAM_ONOFF, true)
+	Machote.ks:addParam("ksIgnite", "KS with Ignite", SCRIPT_PARAM_ONOFF, true)
 
-	MachoteConfig:addSubMenu("Debug", "Debug")
-	MachoteConfig.Debug:addParam("Debug", "Debugging", SCRIPT_PARAM_ONOFF, false)
+	Machote:addSubMenu("Drawing", "draw")
+	Machote.draw:addParam("drawAA", "Draw AA range", SCRIPT_PARAM_ONOFF, false)
+	Machote.draw:addParam("drawQ", "Draw Q range", SCRIPT_PARAM_ONOFF, true)
+	Machote.draw:addParam("drawWR", "Draw W/R range", SCRIPT_PARAM_ONOFF, true)
+	Machote.draw:addParam("drawE", "Draw user-set E range", SCRIPT_PARAM_ONOFF, true)
+	Machote.draw:addParam("drawKill", "Draw Killable", SCRIPT_PARAM_ONOFF, true)
 
-	MachoteConfig:addParam("info3", "Script Author:", SCRIPT_PARAM_INFO, author)
-	MachoteConfig:addParam("info4", "Script Version:", SCRIPT_PARAM_INFO, version)
+	Machote.draw:addSubMenu("Colors", "colors")
+	Machote.draw.colors:addParam("aaColor", "AA Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
+	Machote.draw.colors:addParam("qColor", "Q Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
+	Machote.draw.colors:addParam("wrColor", "W/R Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
+	Machote.draw.colors:addParam("eColor", "E Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
 
-	ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, rangoE)
-	ts.name = "Machote"
-	MachoteConfig:addTS(ts)
+	Machote:addSubMenu("Extras", "extras")
+	Machote.extras:addParam("useSkin", "Use custom skin", SCRIPT_PARAM_ONOFF, false)
+	Machote.extras:addParam("chooseSkin", "Choose skin:", SCRIPT_PARAM_SLICE, 0, 0, 3, 0)
 
-end
-
-function Mensajito()
-	PrintChat("<font color='#19DEDB'>Loaded Taric, el caballero cachondo. Version: "..version.." Have fun!</font>")
+	Machote:addSubMenu("Script Info", "scriptInfo")
+	Machote.scriptInfo:addParam("infoAuth", "Author", SCRIPT_PARAM_INFO, "DaPipex")
+	Machote.scriptInfo:addParam("infoVers", "Version", SCRIPT_PARAM_INFO, version)
 
 	loadDone = true
+
 end
 
 function OnTick()
@@ -185,21 +204,36 @@ function OnTick()
 	if loadDone then
 
 		Chequeos()
-		Killsteal()
+		KillSteal()
 		CalculoDeDano()
 
-		if MachoteConfig.combo.Qinfo.autoHealAlly then
-			AutoHealAlly()
+		if Machote.extras.useSkin then
+			if CambioSkin() then
+				GenModelPacket("Taric", Machote.extras.chooseSkin)
+				lastSkin = Machote.extras.chooseSkin
+			end
 		end
 
-		if MachoteConfig.keys.comboKey then
-			Combo()
+		if Machote.keys.combo then
+			NormalCombo()
 		end
 
-		if MachoteConfig.keys.harassKey then
+		--[[
+		if Machote.keys.SWcombo then
+			SWCombo()
+		end
+		--]]
+
+		if Machote.keys.harass then
 			Harass()
 		end
+
+		if Machote.heal.autoHealMe or Machote.heal.autoHealOthers then
+			AmbulanciaCachonda()
+		end
+
 	end
+
 end
 
 function Chequeos()
@@ -210,136 +244,174 @@ function Chequeos()
 	Rlista = (myHero:CanUseSpell(_R) == READY)
 	Ilista = (castigo ~= nil and myHero:CanUseSpell(castigo) == READY)
 
-	ts:update()
-	Target = ts.target
+	Target = STSta:GetTarget(HechizoE.rangoMax)
 
 end
 
-function Combo()
+function NormalCombo()
 
-	if Qlista and Target ~= nil then
-		if MachoteConfig.combo.Qinfo.useQ == 2 and (myHero.health <= ((MachoteConfig.combo.Qinfo.minHPtoHealSelf / 100) * myHero.maxHealth)) then
-			if MachoteConfig.Debug.Debug then
-				PrintChat("Called Q Self")
+	if Qlista then
+		if Machote.sbtw.qInfo.useQ == 2 then
+			if myHero.health < ((Machote.sbtw.qInfo.useQslider / 100) * myHero.maxHealth) then
+				CastSpell(_Q, myHero)
 			end
-			CastSpell(_Q, myHero)
-		elseif MachoteConfig.combo.Qinfo.useQ == 3 then
-			local wachoPeor = LowestAllyInMyRange(rangoQ)
-			if wachoPeor.health <= ((MachoteConfig.combo.Qinfo.minHPtoHealAlly / 100) * wachoPeor.maxHealth) then
-				if MachoteConfig.Debug.Debug then
-					PrintChat("Called Q Lowest Ally")
+		elseif Machote.sbtw.qInfo.useQ == 3 then
+			local aliados = GetAllyHeroes()
+			for i, ally in pairs(aliados) do
+				if not ally.dead then
+					if GetDistance(ally) < HechizoQ.rango then
+						if ally.health < ((Machote.sbtw.qInfo.useQslider / 100) * ally.maxHealth) then
+							CastSpell(_Q, ally)
+						end
+					end
 				end
-				CastSpell(_Q, wachoPeor)
 			end
 		end
 	end
 
 	if Wlista then
-		if MachoteConfig.combo.Winfo.useW and ((MachoteConfig.combo.Winfo.minWenemies < CountEnemyHeroInRange(rangoW - 10)) or CountEnemyHeroInRange(rangoW) == 1) then
-			if MachoteConfig.Debug.Debug then
-				PrintChat("Called W")
+		if Machote.sbtw.wInfo.useW then
+			if CountEnemyHeroInRange(HechizoW.rango) >= Machote.sbtw.wInfo.useWenemies then
+				CastSpell(_W)
 			end
-			CastSpell(_W)
 		end
 	end
 
 	if Elista and Target ~= nil then
-		if MachoteConfig.combo.Einfo.useE then
-			if MachoteConfig.combo.Einfo.rangeToE >= GetDistance(Target) then
-				if MachoteConfig.Debug.Debug then
-					PrintChat("Called E on "..Target.charName)
-				end
+		if Machote.sbtw.eInfo.useE then
+			if ValidTarget(Target, Machote.sbtw.eInfo.useEslider) then
 				CastSpell(_E, Target)
 			end
 		end
 	end
 
 	if Rlista then
-		if MachoteConfig.combo.Rinfo.useR and ((MachoteConfig.combo.Rinfo.minRenemies < CountEnemyHeroInRange(rangoR - 10)) or CountEnemyHeroInRange(rangoW) == 1) then
-			if MachoteConfig.Debug.Debug then
-				PrintChat("Called R")
+		if Machote.sbtw.rInfo.useR then
+			if CountEnemyHeroInRange(HechizoR.rango) >= Machote.sbtw.rInfo.useRenemies then
+				CastSpell(_R)
 			end
-			CastSpell(_R)
 		end
 	end
 end
 
 function Harass()
 
-	if Elista and Target ~= nil then
-		if MachoteConfig.combo.Einfo.rangeToE >= GetDistance(Target) then
-			if MachoteConfig.Debug.Debug then
-				PrintChat("Called Harass E on "..Target.charName)
+	if Elista and Target ~= nil and ValidTarget(Target, HechizoE.rangoMax) then
+		CastSpell(_E, Target)
+	end
+end
+
+function AmbulanciaCachonda()
+
+	if Machote.heal.autoHealMe then
+		if Qlista then
+			if myHero.health < ((Machote.heal.AHMslide / 100) * myHero.maxHealth) then
+				CastSpell(_Q, myHero)
 			end
-			CastSpell(_E, Target)
+		end
+	end
+
+	if Machote.heal.autoHealOthers then
+		if Qlista then
+			local aliados = GetAllyHeroes()
+			for i, ally in pairs(aliados) do
+				if not ally.dead then
+					if GetDistance(ally) < HechizoQ.rango then
+						if ally.health > ((Machote.heal.AHOslide / 100) * ally.maxHealth) then
+							CastSpell(_Q, ally)
+						end
+					end
+				end
+			end
 		end
 	end
 end
 
-function Killsteal()
+function KillSteal()
 
-	local wachos = GetEnemyHeroes()
-	for i, enemigo in pairs(wachos) do
+	local perrosCuliaos = GetEnemyHeroes()
 
-		if MachoteConfig.killsteal.ksW then
-			if ValidTarget(enemigo, rangoW - 10) and Wlista and not Elista and not Rlista then
-				if enemigo.health <= getDmg("W", enemigo, myHero) then
-					if MachoteConfig.Debug.Debug then
-						PrintChat("Tried to KS with W: "..enemigo.charName)
-					end
+	for i, enemy in pairs(perrosCuliaos) do
+
+		if Machote.ks.ksW and Wlista then
+			if GetDistance(enemy) < HechizoW.rango and ValidTarget(enemy) then
+				if getDmg("W", enemy, myHero) > enemy.health then
 					CastSpell(_W)
 				end
 			end
 		end
 
-		if MachoteConfig.killsteal.ksE then
-			if ValidTarget(enemigo, rangoE) and Elista and not Rlista then
-				if enemigo.health <= getDmg("E", enemigo, myHero) then
-					if MachoteConfig.Debug.Debug then
-						PrintChat("Tried to KS with E "..enemigo.charName)
-					end
-					CastSpell(_E, enemigo)
+		if Machote.ks.ksE and Elista then
+			if GetDistance(enemy) < HechizoE.rangoMax and ValidTarget(enemy) then
+				if getDmg("E", enemy, myHero) > enemy.health then
+					CastSpell(_E, enemy)
 				end
 			end
 		end
 
-		if MachoteConfig.killsteal.ksR then
-			if ValidTarget(enemigo, rangoR - 10) and Rlista then
-				if enemigo.health <= getDmg("R", enemigo, myHero) then
-					if MachoteConfig.Debug.Debug then
-						PrintChat("Tried to KS with R: "..enemigo.charName)
-					end
+		if Machote.ks.ksR and Rlista then
+			if GetDistance(enemy) < HechizoR.rango and ValidTarget(enemy) then
+				if getDmg("R", enemy, myHero) > enemy.health then
 					CastSpell(_R)
 				end
 			end
 		end
 
-		if MachoteConfig.killsteal.ksI then
-			if ValidTarget(enemigo, 600) and Ilista then
-				if enemigo.health <= getDmg("IGNITE", enemigo, myHero) then
-					if MachoteConfig.Debug.Debug then
-						PrintChat("Tried to KS with Ignite: "..enemigo.charName)
-					end
-					CastSpell(castigo, enemigo)
+		if Machote.ks.ksIgnite and Ilista then
+			if GetDistance(enemy) < 600 and ValidTarget(enemy) then
+				if getDmg("IGNITE", enemy, myHero) > enemy.health then
+					CastSpell(castigo, enemy)
 				end
 			end
 		end
 	end
 end
 
-function LowestAllyInMyRange(range)
-	local pobrecito = nil
-	for i=1, heroManager.iCount do
-		local wachitoPrueba = heroManager:GetHero(i)
-		if wachitoPrueba.team == myHero.team and not wachitoPrueba.dead and GetDistance(wachitoPrueba) < range then
-			if pobrecito == nil then
-				pobrecito = wachitoPrueba
-			elseif not pobrecito.dead and (wachitoPrueba.health / wachitoPrueba.maxHealth) < (pobrecito.health / pobrecito.maxHealth) then
-				pobrecito = wachitoPrueba
+function ExtrasMenu()
+
+	if #InterrumpirJuego > 0 then
+		for i, hechizoInter in pairs(InterrumpirJuego) do
+			Machote.inter:addParam(hechizoInter, hechizoInter, SCRIPT_PARAM_ONOFF, true)
+		end
+	else
+		Machote.inter:addParam("info1", "No supported spells found", SCRIPT_PARAM_INFO, "")
+	end
+end
+
+function OnProcessSpell(unit, spell)
+
+	if unit == myHero then
+		if spell.name:lower():find("attack") then
+			tiempoAnimacion = spell.windUpTime
+		end
+	end
+
+	if #InterrumpirJuego > 0 and Elista then
+		for i, hechizoInter in pairs(InterrumpirJuego) do
+			if spell.name == hechizoInter and (unit.team ~= myHero.team) and Machote.inter[hechizoInter] then
+				if ValidTarget(unit, HechizoE.rangoMax) then
+					CastSpell(_E, unit)
+				end
 			end
 		end
 	end
-	return pobrecito
+end
+
+function OnAnimation(unit, animation)
+
+	if unit.isMe and animation:lower():find("attack") and Target ~= nil then
+		if Machote.keys.SWcombo then
+			if Elista and ValidTarget(Target, HechizoE.rangoMax) then
+				DelayAction(function() CastSpell(_E, Target) end, tiempoAnimacion + 0.01)
+			elseif Rlista and not Elista and ValidTarget(Target, HechizoR.rango) then
+				DelayAction(function() CastSpell(_R) end, tiempoAnimacion + 0.01)
+			elseif Wlista and not Rlista and not Elista and ValidTarget(Target, HechizoW.rango) then
+				DelayAction(function() CastSpell(_W) end, tiempoAnimacion + 0.01)
+			elseif Qlista and not Wlista and not Rlista and not Elista and ValidTarget(Target, 400) then
+				DelayAction(function() CastSpell(_Q, myHero) end, tiempoAnimacion + 0.01)
+			end
+		end
+	end
 end
 
 function CalculoDeDano()
@@ -373,34 +445,31 @@ function CalculoDeDano()
 	end
 end
 
+function TRGB(colorTable)
+	return RGB(colorTable[2], colorTable[3], colorTable[4])
+end
+
 function OnDraw()
-	if loadDone then
 
-		if MachoteConfig.draw.drawQrange then
-			DrawCircle(myHero.x, myHero.y, myHero.z, rangoQ, RGB(255, 255, 255))
+	if loadDone and not myHero.dead then
+
+		if Machote.draw.drawAA then
+			DrawCircle(myHero.x, myHero.y, myHero.z, SOWi:MyRange(), TRGB(Machote.draw.colors.aaColor))
 		end
 
-		if MachoteConfig.draw.drawWrange then
-			DrawCircle(myHero.x, myHero.y, myHero.z, rangoW, RGB(255, 255, 255))
+		if Machote.draw.drawQ then
+			DrawCircle(myHero.x, myHero.y, myHero.z, HechizoQ.rango, TRGB(Machote.draw.colors.qColor))
 		end
 
-		if MachoteConfig.draw.drawErange then
-			DrawCircle(myHero.x, myHero.y, myHero.z, MachoteConfig.combo.Einfo.rangeToE, RGB(255, 255, 255))
+		if Machote.draw.drawWR then
+			DrawCircle(myHero.x, myHero.y, myHero.z, HechizoW.rango, TRGB(Machote.draw.colors.wrColor))
 		end
 
-		if MachoteConfig.draw.drawRrange then
-			DrawCircle(myHero.x, myHero.y, myHero.z, rangoR, RGB(255, 255, 255))
+		if Machote.draw.drawE then
+			DrawCircle(myHero.x, myHero.y, myHero.z, Machote.sbtw.eInfo.useEslider, TRGB(Machote.draw.colors.eColor))
 		end
 
-		if MachoteConfig.draw.drawAArange then
-			DrawCircle(myHero.x, myHero.y, myHero.z, SOWi:MyRange() + 25, RGB(0, 255, 0))
-		end
-
-		if MachoteConfig.draw.drawTarget and Target ~= nil then
-			DrawCircle(Target.x, Target.y, Target.z, 500, RGB(255, 0, 255))
-		end
-
-		if MachoteConfig.draw.drawKill then
+		if Machote.draw.drawKill then
 			for i=1, heroManager.iCount do
 				local objetivo = heroManager:GetHero(i)
 				if ValidTarget(objetivo, 3500) and objetivo ~= nil and TextosEsperar[i] == 1 then
@@ -415,81 +484,5 @@ function OnDraw()
 				end
 			end
 		end
-	end
-end
-
-function OnAnimation(unit, animation)
-
-	if unit.isMe and animation:lower():find("attack") and Target ~= nil then
-		if MachoteConfig.Debug.Debug then
-			PrintChat(animation)
-		end
-
-		if MachoteConfig.keys.comboWeavingKey and MachoteConfig.combo.Einfo.useE and Elista and (GetDistance(Target) < ((SOWi:MyRange() + 25) + VP:GetHitBox(Target))) then
-			DelayAction(function() CastSpell(_E, Target) end, tiempoAnimacion + 0.01)
-			if MachoteConfig.Debug.Debug then
-				PrintChat("E en cadena")
-			end
-
-		elseif MachoteConfig.keys.comboWeavingKey and MachoteConfig.combo.Rinfo.useR and Rlista and not Elista and (GetDistance(Target) < ((SOWi:MyRange() + 25) + VP:GetHitBox(Target))) then
-			DelayAction(function() CastSpell(_R) end, tiempoAnimacion + 0.01)
-			if MachoteConfig.Debug.Debug then
-				PrintChat("R en cadena")
-			end
-
-		elseif MachoteConfig.keys.comboWeavingKey and MachoteConfig.combo.Winfo.useW and Wlista and not Elista and not Rlista and (GetDistance(Target) < ((SOWi:MyRange() + 25) + VP:GetHitBox(Target))) then
-			DelayAction(function() CastSpell(_W) end, tiempoAnimacion + 0.01)
-			if MachoteConfig.Debug.Debug then
-				PrintChat("W en cadena")
-			end
-
-		elseif MachoteConfig.keys.comboWeavingKey and not (MachoteConfig.combo.Qinfo.useQ == 1) and Qlista and not Wlista and not Elista and not Rlista and (GetDistance(Target) < (SOWi:MyRange() + 25)) then
-			DelayAction(function() CastSpell(_Q, myHero) end, tiempoAnimacion + 0.01)
-			if MachoteConfig.Debug.Debug then
-				PrintChat("Q en cadena")
-			end
-		end
-	end
-end
-
-function OnProcessSpell(unit, spell)
-
-	if unit == myHero then
-		if spell.name:lower():find("attack") then
-			tiempoAnimacion = spell.windUpTime
-		end
-	end
-
-	if #InterrumpirJuego > 0 and Elista then
-		for i, habilidad in pairs(InterrumpirJuego) do
-			if spell.name == habilidad and (unit.team ~= myHero.team) and MachoteConfig.inter[habilidad] then
-				if GetDistance(unit) < rangoE then
-					CastSpell(_E, unit)
-				end
-			end
-		end
-	end
-end
-
-function AutoHealAlly()
-
-	local ally = GetAllyHeroes()
-	for i, aliadoAcurar in pairs(ally) do
-		if aliadoAcurar.health < ((MachoteConfig.combo.Qinfo.AHAmin / 100) * aliadoAcurar.maxHealth) then
-			if GetDistance(aliadoAcurar) < rangoQ then
-				CastSpell(_Q, aliadoAcurar)
-			end
-		end
-	end
-end
-
-function InterrumpirMenu()
-
-	if #InterrumpirJuego > 0 then
-		for i, hechizoInter in pairs(InterrumpirJuego) do
-			MachoteConfig.inter:addParam(hechizoInter, hechizoInter, SCRIPT_PARAM_ONOFF, true)
-		end
-	else
-		MachoteConfig.inter:addParam("info2", "No supported spells found", SCRIPT_PARAM_INFO, "")
 	end
 end

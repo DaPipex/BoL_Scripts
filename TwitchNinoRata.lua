@@ -4,7 +4,7 @@ by
 DaPipex
 --]]
 
-local version = "1.1"
+local version = "1.2"
 
 if myHero.charName ~= "Twitch" then return end
 
@@ -174,6 +174,7 @@ function TwitchMenu()
 	--Twitchy.draw:addParam("aaRange", "AA Range normal", SCRIPT_PARAM_ONOFF, false)
 	Twitchy.draw:addParam("rRange", "AA Range if R on", SCRIPT_PARAM_ONOFF, true)
 	Twitchy.draw:addParam("invDuration", "Invisibility Duration", SCRIPT_PARAM_ONOFF, true)
+	Twitchy.draw:addParam("stackCount", "Enemy Stack Count", SCRIPT_PARAM_ONOFF, true)
 
 	Twitchy.draw:addSubMenu("Colors", "colors")
 	Twitchy.draw.colors:addParam("qColor", "Q Range Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
@@ -440,12 +441,22 @@ function OnDraw()
 			DrawCircle(myHero.x, myHero.y, myHero.z, HechizoR.rango, TRGB(Twitchy.draw.colors.rColor))
 		end
 
+		if Twitchy.draw.stackCount then
+			for i, enemy in pairs(GetEnemyHeroes()) do
+				local EnemyToScreen = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z))
+				DrawText(tostring(VenenoCount[enemy.charName]), 25, EnemyToScreen.x, EnemyToScreen.y, RGB(255, 255, 0))
+			end
+		end
+
 		if Twitchy.draw.invDuration then
 			local HeroToScreen = WorldToScreen(D3DXVECTOR3(myHero.x, myHero.y, myHero.z))
 			local TickAhora = GetTickCount()
 			if InvisiDuration then
 				local Remnant = ((TickAhora - InvisiTick) / 1000)
 				local RealRemnant = (InvisiDuration - Remnant)
+				if RealRemnant < 0 then
+					InvisiDuration = nil
+				end
 				DrawText(tostring(Dienoround(RealRemnant, 1)), 25, HeroToScreen.x, HeroToScreen.y, RGB(0, 255, 0))
 			else
 				DrawText("Visible", 25, HeroToScreen.x, HeroToScreen.y, RGB(255, 0, 0))

@@ -4,7 +4,7 @@ by
 DaPipex
 --]]
 
-local version = "1.0"
+local version = "1.1"
 
 if myHero.charName ~= "Twitch" then return end
 
@@ -60,7 +60,22 @@ function OnLoad()
 
 	PrintChat("<font color='#246205'>Twitch niño rata: Loaded!</font>")
 
+	UpdateWeb(true, ScriptName, id, HWID)
+
 end
+
+function OnUnload()
+
+	UpdateWeb(false, ScriptName, id, HWID)
+
+end
+
+function OnBugsplat()
+
+	UpdateWeb(false, ScriptName, id, HWID)
+
+end
+
 
 function TwitchVars()
 	
@@ -75,6 +90,7 @@ function TwitchVars()
 
 	VenenoCount = {}
 
+	InvisiDuration = nil
 
 	castigo = nil
 
@@ -138,6 +154,7 @@ function TwitchMenu()
 
 	Twitchy:addSubMenu("Harass", "harass")
 	Twitchy.harass:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+	Twitchy.harass:addParam("useWmana", "W Mana Manager", SCRIPT_PARAM_SLICE, 30, 1, 100, 0)
 	Twitchy.harass:addParam("useE", "Use E when available", SCRIPT_PARAM_ONOFF, false)
 
 	Twitchy:addSubMenu("Items", "items")
@@ -156,6 +173,7 @@ function TwitchMenu()
 	Twitchy.draw:addParam("eRange", "Range to use E", SCRIPT_PARAM_ONOFF, true)
 	--Twitchy.draw:addParam("aaRange", "AA Range normal", SCRIPT_PARAM_ONOFF, false)
 	Twitchy.draw:addParam("rRange", "AA Range if R on", SCRIPT_PARAM_ONOFF, true)
+	Twitchy.draw:addParam("invDuration", "Invisibility Duration", SCRIPT_PARAM_ONOFF, true)
 
 	Twitchy.draw:addSubMenu("Colors", "colors")
 	Twitchy.draw.colors:addParam("qColor", "Q Range Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
@@ -202,6 +220,11 @@ function OnTick()
 
 		if Twitchy.keys.harassKey or Twitchy.keys.harassKeyToggle then
 			Harass()
+		end
+
+		if GetGame().isOver then
+			UpdateWeb(false, ScriptName, id, HWID)
+			loadDone = false
 		end
 
 	end
@@ -273,8 +296,10 @@ function Harass()
 
 	if Wlista then
 		if Target ~= nil then
-			if Twitchy.harass.useW then
-				CastW(Target, true)
+			if myHero.mana > ((Twitchy.harass.useWmana / 100) * myHero.maxMana) then
+				if Twitchy.harass.useW then
+					CastW(Target, true)
+				end
 			end
 		end
 	end
@@ -301,6 +326,11 @@ function OnGainBuff(unit, buff)
 			VenenoCount[unit.charName] = buff.stack
 		end
 	end
+
+	if unit.isMe and buff.name == "TwitchHideInShadows" then
+		InvisiTick = GetTickCount()
+		InvisiDuration = buff.duration
+	end
 end
 
 function OnLoseBuff(unit, buff)
@@ -309,6 +339,11 @@ function OnLoseBuff(unit, buff)
 		if buff.name == "twitchdeadlyvenom" then
 			VenenoCount[unit.charName] = 0
 		end
+	end
+
+	if unit.isMe and buff.name == "TwitchHideInShadows" then
+		InvisiTick = nil
+		InvisiDuration = nil
 	end
 end
 
@@ -404,6 +439,18 @@ function OnDraw()
 		if Twitchy.draw.rRange then
 			DrawCircle(myHero.x, myHero.y, myHero.z, HechizoR.rango, TRGB(Twitchy.draw.colors.rColor))
 		end
+
+		if Twitchy.draw.invDuration then
+			local HeroToScreen = WorldToScreen(D3DXVECTOR3(myHero.x, myHero.y, myHero.z))
+			local TickAhora = GetTickCount()
+			if InvisiDuration then
+				local Remnant = ((TickAhora - InvisiTick) / 1000)
+				local RealRemnant = (InvisiDuration - Remnant)
+				DrawText(tostring(Dienoround(RealRemnant, 1)), 25, HeroToScreen.x, HeroToScreen.y, RGB(0, 255, 0))
+			else
+				DrawText("Visible", 25, HeroToScreen.x, HeroToScreen.y, RGB(255, 0, 0))
+			end
+		end
 	end
 end
 
@@ -439,3 +486,9 @@ end
 function CambioSkin()
 	return Twitchy.extras.chooseSkin ~= lastSkin
 end
+
+--Credits Dienofail from his Jayce Script--
+function Dienoround(num, idp)
+	return string.format("%." .. (idp or 0) .. "f", num)
+end
+--Credits Dienofail from his Jayce Script--

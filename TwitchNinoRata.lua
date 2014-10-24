@@ -4,7 +4,7 @@ by
 DaPipex
 --]]
 
-local version = "1.2"
+local version = "1.3"
 
 if myHero.charName ~= "Twitch" then return end
 
@@ -45,7 +45,7 @@ end
 local RequireSL = Require("Twitchy Libs")
 RequireSL:Add("VPrediction", "https://raw.githubusercontent.com/Hellsing/BoL/master/common/VPrediction.lua")
 RequireSL:Add("SOW", "https://raw.githubusercontent.com/Hellsing/BoL/master/common/SOW.lua")
-RequireSL:Add("SxOrbWalk", "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua")
+--RequireSL:Add("SxOrbWalk", "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua")
 
 RequireSL:Check()
 
@@ -94,12 +94,11 @@ function TwitchVars()
 
 	castigo = nil
 
-	VP, SOWi, STStw, SxOrb = nil, nil, nil, nil
+	VP, SOWi, STStw, SxOrb = nil, nil, nil
 
 	VP = VPrediction()
 	SOWi = SOW(VP)
 	STStw = SimpleTS(STS_PRIORITY_LESS_CAST_PHYSICAL)
-	SxOrb = SxOrbWalk()
 
 	local enemigos = GetEnemyHeroes()
 	for i, enemy in pairs(enemigos) do
@@ -121,9 +120,6 @@ function TwitchMenu()
 	Twitchy:addSubMenu("Orbwalking - SOW", "orbwSOW")
 	SOWi:LoadToMenu(Twitchy.orbwSOW, STStw)
 
-	Twitchy:addSubMenu("Orbwalking - SxOrb", "orbwSx")
-	SxOrb:LoadToMenu(Twitchy.orbwSx)
-
 	Twitchy:addSubMenu("Simple Target Selector", "sts")
 	STStw:AddToMenu(Twitchy.sts)
 
@@ -143,6 +139,7 @@ function TwitchMenu()
 	Twitchy.combo:addSubMenu("W Settings", "wInfo")
 	Twitchy.combo.wInfo:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
 	Twitchy.combo.wInfo:addParam("useWenemies", "^ if will hit # enemies", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
+	Twitchy.combo.wInfo:addParam("useWpred", "Use with Prediction", SCRIPT_PARAM_ONOFF, true)
 
 	Twitchy.combo:addSubMenu("E Settings", "eInfo")
 	Twitchy.combo.eInfo:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
@@ -150,12 +147,14 @@ function TwitchMenu()
 
 	Twitchy.combo:addSubMenu("R Settings", "rInfo")
 	Twitchy.combo.rInfo:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, true)
-	Twitchy.combo.rInfo:addParam("useRenemies", "if # enemies in range", SCRIPT_PARAM_SLICE, 3, 1, 6, 0)
+	Twitchy.combo.rInfo:addParam("useRenemies", "if # enemies in range", SCRIPT_PARAM_SLICE, 2, 1, 6, 0)
 
 	Twitchy:addSubMenu("Harass", "harass")
 	Twitchy.harass:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
 	Twitchy.harass:addParam("useWmana", "W Mana Manager", SCRIPT_PARAM_SLICE, 30, 1, 100, 0)
-	Twitchy.harass:addParam("useE", "Use E when available", SCRIPT_PARAM_ONOFF, false)
+	Twitchy.harass:addParam("useWpred", "Use with Prediction", SCRIPT_PARAM_ONOFF, true)
+	Twitchy.harass:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, false)
+	Twitchy.harass:addParam("useEminStacks", "Min Poison Stacks", SCRIPT_PARAM_SLICE, 3, 1, 6, 0)
 
 	Twitchy:addSubMenu("Items", "items")
 	Twitchy.items:addParam("useBOTRK", "Use Ruined King", SCRIPT_PARAM_ONOFF, true)
@@ -171,7 +170,7 @@ function TwitchMenu()
 	Twitchy.draw:addParam("wRange", "Range to use W", SCRIPT_PARAM_ONOFF, true)
 	Twitchy.draw:addParam("wSplash", "W AOE Range", SCRIPT_PARAM_ONOFF, false)
 	Twitchy.draw:addParam("eRange", "Range to use E", SCRIPT_PARAM_ONOFF, true)
-	--Twitchy.draw:addParam("aaRange", "AA Range normal", SCRIPT_PARAM_ONOFF, false)
+	Twitchy.draw:addParam("aaRange", "AA Range normal", SCRIPT_PARAM_ONOFF, false)
 	Twitchy.draw:addParam("rRange", "AA Range if R on", SCRIPT_PARAM_ONOFF, true)
 	Twitchy.draw:addParam("invDuration", "Invisibility Duration", SCRIPT_PARAM_ONOFF, true)
 	Twitchy.draw:addParam("stackCount", "Enemy Stack Count", SCRIPT_PARAM_ONOFF, true)
@@ -182,6 +181,7 @@ function TwitchMenu()
 	Twitchy.draw.colors:addParam("wAOEColor", "W AOE Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
 	Twitchy.draw.colors:addParam("eColor", "E Range Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
 	Twitchy.draw.colors:addParam("rColor", "R Range Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
+	Twitchy.draw.colors:addParam("aaColor", "AA Range Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
 
 	Twitchy:addSubMenu("Prediction", "pred")
 	Twitchy.pred:addParam("mode", "Choose Prediction:", SCRIPT_PARAM_LIST, 1, {"VPrediction"})
@@ -268,8 +268,10 @@ function Combo()
 	end
 
 	if Wlista then
-		if Twitchy.combo.wInfo.useW and Target ~= nil then
-			CastW(Target, false)
+		if Twitchy.combo.wInfo.useW and Target ~= nil and Twitchy.combo.wInfo.useWpred then
+			CastW(Target, false, true)
+		else
+			CastW(Target, false, false)
 		end
 	end
 
@@ -298,8 +300,10 @@ function Harass()
 	if Wlista then
 		if Target ~= nil then
 			if myHero.mana > ((Twitchy.harass.useWmana / 100) * myHero.maxMana) then
-				if Twitchy.harass.useW then
-					CastW(Target, true)
+				if Twitchy.harass.useW and Twitchy.harass.useWpred then
+					CastW(Target, true, true)
+				else
+					CastW(Target, true, false)
 				end
 			end
 		end
@@ -310,7 +314,7 @@ function Harass()
 			local enemigos = GetEnemyHeroes()
 			for i, enemy in pairs(enemigos) do
 				if ValidTarget(enemy, HechizoE.rango) then
-					if VenenoCount[enemy.charName] ~= 0 then
+					if VenenoCount[enemy.charName] >= Twitchy.harass.useEminStacks then
 						CastSpell(_E)
 					end
 				end
@@ -357,17 +361,31 @@ function OnUpdateBuff(unit, buff)
 	end
 end
 
-function CastW(Weon, HarassMode)
+function CastW(Weon, HarassMode, UsePred)
 
-	if not HarassMode then
-		local AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(Weon, HechizoW.demora, HechizoW.ancho, HechizoW.rango, HechizoW.velocidad, myHero)
-		if AOECastPosition and nTargets >= Twitchy.combo.wInfo.useWenemies then
-			CastSpell(_W, AOECastPosition.x, AOECastPosition.z)
+	if not UsePred and not HarassMode then
+		local enemiesRangeTarget = 0
+		if ValidTarget(Target, HechizoW.rango) then
+			enemiesRangeTarget = CountEnemyHeroInRange(HechizoW.ancho, Target)
+			if enemiesRangeTarget >= Twitchy.combo.wInfo.useWenemies then
+				CastSpell(_W, Target)
+			end
+		end
+	elseif not UsePred and HarassMode then
+		if ValidTarget(Target, HechizoW.rango) then
+			CastSpell(_W, Target)
 		end
 	else
-		local CastPosition, HitChance, Position = VP:GetCircularCastPosition(Weon, HechizoW.demora, HechizoW.ancho, HechizoW.rango, HechizoW.velocidad, myHero, false)
-		if CastPosition and HitChance >= 1 then
-			CastSpell(_W, CastPosition.x, CastPosition.z)
+		if not HarassMode then
+			local AOECastPosition, MainTargetHitChance, nTargets = VP:GetCircularAOECastPosition(Weon, HechizoW.demora, HechizoW.ancho, HechizoW.rango, HechizoW.velocidad, myHero)
+			if AOECastPosition and nTargets >= Twitchy.combo.wInfo.useWenemies then
+				CastSpell(_W, AOECastPosition.x, AOECastPosition.z)
+			end
+		else
+			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(Weon, HechizoW.demora, HechizoW.ancho, HechizoW.rango, HechizoW.velocidad, myHero, false)
+			if CastPosition and HitChance >= 1 then
+				CastSpell(_W, CastPosition.x, CastPosition.z)
+			end
 		end
 	end
 end
@@ -399,11 +417,14 @@ function KillSteal()
 
 	local enemigos = GetEnemyHeroes()
 	for i, enemy in pairs(enemigos) do
-		if ValidTarget(enemy, HechizoW.rango) then
-			local PoisonStacks = VenenoCount[enemy.charName]
-			local eDMG = (5*myHero:GetSpellData(_E).level+10+.2*myHero.ap+.25*myHero.addDamage)*PoisonStacks
-			if myHero:CalcDamage(enemy, eDMG) > enemy.health then
-				CastSpell(_E)
+
+		if Twitchy.ks.ksE then
+			if ValidTarget(enemy, HechizoE.rango) then
+				local PoisonStacks = VenenoCount[enemy.charName]
+				local eDMG = (5*myHero:GetSpellData(_E).level+10+.2*myHero.ap+.25*myHero.addDamage)*PoisonStacks
+				if myHero:CalcDamage(enemy, eDMG) > enemy.health then
+					CastSpell(_E)
+				end
 			end
 		end
 
@@ -441,10 +462,16 @@ function OnDraw()
 			DrawCircle(myHero.x, myHero.y, myHero.z, HechizoR.rango, TRGB(Twitchy.draw.colors.rColor))
 		end
 
+		if Twitchy.draw.aaRange then
+			DrawCircle(myHero.x, myHero.y, myHero.z, SOWi:MyRange(), TRGB(Twitchy.draw.colors.aaColor))
+		end
+
 		if Twitchy.draw.stackCount then
 			for i, enemy in pairs(GetEnemyHeroes()) do
-				local EnemyToScreen = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z))
-				DrawText(tostring(VenenoCount[enemy.charName]), 25, EnemyToScreen.x, EnemyToScreen.y, RGB(255, 255, 0))
+				if enemy.visible then
+					local EnemyToScreen = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z))
+					DrawText(tostring(VenenoCount[enemy.charName]), 25, EnemyToScreen.x, EnemyToScreen.y, RGB(255, 255, 0))
+				end
 			end
 		end
 

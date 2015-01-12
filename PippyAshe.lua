@@ -221,7 +221,7 @@ function AsheMenu()
 
 	AshyMenu:addSubMenu("Ult Helper", "ulti")
 	AshyMenu.ulti:addParam("fireKey", "Fire ult Key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
-	AshyMenu.ulti:addParam("info7", "Range to check:", SCRIPT_PARAM_INFO, "1000")
+	AshyMenu.ulti:addParam("info7", "Range to check:", SCRIPT_PARAM_INFO, "1500")
 	--AshyMenu.ulti:addParam("fireMode", "Fire Mode", SCRIPT_PARAM_LIST, 1, { "Closest Enemy", "Ult Target Selector" })
 	AshyMenu.ulti:addTS(tsUlti)
 

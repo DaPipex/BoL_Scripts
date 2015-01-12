@@ -5,6 +5,10 @@ DaPipex]]
 local version = "1.0"
 
 local DaPipexAsheUpdate = true
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/DaPipex/BoL_Scripts/master/PippyAshe.lua".."?rand="..math.random(1,10000)
+local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
+local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
 --[[
                                                                         
@@ -20,6 +24,24 @@ if myHero.charName ~= "Ashe" then return end
 
 function printScript(message)
 	PrintChat("<font color='#08B4D7'><b>Pippy Ashe:</b></font> <font color='#FFFFFF'>"..message.."</font>")
+end
+
+if DaPipexAsheUpdate then
+	local ServerData = GetWebResult(UPDATE_HOST, "/DaPipex/BoL_Scripts/master/PippyAshe.version")
+	if ServerData then
+		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
+		if ServerVersion then
+			if tonumber(version) < ServerVersion then
+				printScript("New version available: "..ServerVersion)
+				printScript("Updating, please don't press F9")
+				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () printScript("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)
+			else
+				printScript("You have got the latest version ("..ServerVersion..")")
+			end
+		end
+	else
+		printScript("Error downloading version info")
+	end
 end
 
 local lib_Required = {
@@ -58,9 +80,6 @@ end
 
 if lib_downloadNeeded then return end
 
-if DaPipexAsheUpdate then
-	SourceUpdater("PippyAshe", version, "raw.github.com", "/DaPipex/BoL_Scripts/master/PippyAshe.lua", SCRIPT_PATH..GetCurrentEnv().FILE_NAME):CheckUpdate()
-end
 
 function CheckSAC()
 	if (_G.AutoCarry ~= nil) or (_G.Reborn_Loaded ~= nil) then
@@ -79,7 +98,7 @@ function OnLoad()
 	ItemVars()
 	AsheMenu()
 	DelayAction(LoadSxLib, 6)
-	printScript("Script Loaded! Version: "..version)
+	--printScript("Script Loaded! Version: "..version)
 end
 
 function LoadSxLib()

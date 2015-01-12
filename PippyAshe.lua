@@ -22,10 +22,6 @@ function printScript(message)
 	PrintChat("<font color='#08B4D7'><b>Pippy Ashe:</b></font> <font color='#FFFFFF'>"..message.."</font>")
 end
 
-if DaPipexAsheUpdate then
-	SourceUpdater("PippyAshe", version, "raw.github.com", "/DaPipex/BoL_Scripts/master/PippyAshe.lua", SCRIPT_PATH..GetCurrentEnv().FILE_NAME):CheckUpdate()
-end
-
 local lib_Required = {
 
 	["VPrediction"]	= "https://raw.github.com/Ralphlol/BoLGit/master/VPrediction.lua",
@@ -61,6 +57,10 @@ for lib_downloadName, lib_downloadUrl in pairs(lib_Required) do
 end
 
 if lib_downloadNeeded then return end
+
+if DaPipexAsheUpdate then
+	SourceUpdater("PippyAshe", version, "raw.github.com", "/DaPipex/BoL_Scripts/master/PippyAshe.lua", SCRIPT_PATH..GetCurrentEnv().FILE_NAME):CheckUpdate()
+end
 
 function CheckSAC()
 	if (_G.AutoCarry ~= nil) or (_G.Reborn_Loaded ~= nil) then

@@ -2,7 +2,7 @@
 by
 DaPipex]]
 
-local version = "1.0"
+local version = "1.1"
 
 local DaPipexAsheUpdate = true
 local UPDATE_HOST = "raw.github.com"
@@ -130,6 +130,8 @@ function AsheVars()
 
 	}
 
+	AbilitySequence = {2, 1, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3}
+
 	MyTrueRange = (Spell.AA.Range + GetDistance(myHero.minBBox))
 
 	VP = VPrediction()
@@ -212,8 +214,10 @@ function AsheMenu()
 
 	AshyMenu:addSubMenu("Interrupter Settings", "interrupt")
 	if #InterruptGame > 0 then
+		AshyMenu.interrupt:addParam("interruptRange", "Interrupt Range", SCRIPT_PARAM_SLICE, 1000, 1, 1500, 0)
+		AshyMenu.interrupt:addParam("info8", "", SCRIPT_PARAM_INFO, "")
 		for i, v in pairs(InterruptGame) do
-			AshyMenu.interrupt:addParam(v.hechizo, v.nombre.."-"..v.hechizo, SCRIPT_PARAM_ONOFF, true)
+			AshyMenu.interrupt:addParam(v.hechizo, v.nombre.." - "..v.hechizo, SCRIPT_PARAM_ONOFF, true)
 		end
 	else
 		AshyMenu.interrupt:addParam("info1", "No supported spells found", SCRIPT_PARAM_INFO, "")
@@ -247,6 +251,8 @@ function AsheMenu()
 	AshyMenu.draw:addParam("eColor", "Color:", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
 	AshyMenu.draw:addParam("rKsRange", "Draw R KS Range", SCRIPT_PARAM_ONOFF, false)
 	AshyMenu.draw:addParam("rColor", "Color:", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
+	AshyMenu.draw:addParam("rInterruptRange", "Draw R Interrupt Range", SCRIPT_PARAM_ONOFF, false)
+	AshyMenu.draw:addParam("rInterColor", "Color:", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
 
 	AshyMenu:addSubMenu("Target Selection Settings", "ts")
 	AshyMenu.ts:addTS(ts)
@@ -254,6 +260,9 @@ function AsheMenu()
 	AshyMenu.ts:addParam("chooseTS", "Choose TS", SCRIPT_PARAM_LIST, 1, { "Allclass TS", "SimpleTS" })
 	AshyMenu.ts:addParam("info6", "-------------------", SCRIPT_PARAM_INFO, "")
 	STSa:AddToMenu(AshyMenu.ts)
+
+	AshyMenu:addSubMenu("Auto Level Settings", "als")
+	AshyMenu.als:addParam("option1", "Auto Level: R-W-Q-E", SCRIPT_PARAM_ONOFF, false)
 
 	AshyMenu:addParam("comboKey", "Combo Key (SPACE)", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 	AshyMenu:addParam("harassKey", "Harass Key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
@@ -284,6 +293,10 @@ function OnTick()
 		if AshyMenu.ulti.fireKey then
 			UltHelper()
 		end
+
+		if AshyMenu.als.option1 then
+			AutoLevelSpells()
+		end
 	end
 end
 
@@ -312,6 +325,27 @@ function Checks()
 	Spell.E.Range = 2500 + (myHero:GetSpellData(_E).level - 1) * 750
 
 end
+
+function AutoLevelSpells()
+
+	local qLevel = myHero:GetSpellData(_Q).level
+	local wLevel = myHero:GetSpellData(_W).level
+	local eLevel = myHero:GetSpellData(_E).level
+	local rLevel = myHero:GetSpellData(_R).level
+
+	if qLevel + wLevel + eLevel + rLevel < myHero.level then
+		local spellSlot = { SPELL_1, SPELL_2, SPELL_3, SPELL_4 }
+		local level = { 0, 0, 0, 0 }
+		for i = 1, player.level, 1 do
+			level[AbilitySequence[i]] = level[AbilitySequence[i]] + 1
+		end
+		for i, v in ipairs({ qLevel, wLevel, eLevel, rLevel }) do
+			if v < level[i] then LevelSpell(spellSlot[i]) end
+		end
+	end
+end
+
+
 
 function Combo()
 
@@ -382,7 +416,7 @@ function UseItems()
 
 		if AshyMenu.item.useYMG and (GetDistance(Target) < (MyTrueRange - 100)) then
 			if Item.YMG.Ready then
-				CastSpell(Item.YMG.Slot, Target)
+				CastSpell(Item.YMG.Slot)
 			end
 		end
 	end
@@ -445,6 +479,10 @@ function OnDraw()
 			if AshyMenu.draw.rKsRange then
 				DrawCircle2(myHero.x, myHero.y, myHero.z, AshyMenu.ks.ksRrange, TARGB(AshyMenu.draw.rColor))
 			end
+
+			if AshyMenu.draw.rInterruptRange then
+				DrawCircle2(myHero.x, myHero.y, myHero.z, AshyMenu.interrupt.interruptRange, TARGB(AshyMenu.draw.rInterColor))
+			end
 		else
 			--if AshyMenu.draw.qRange then
 			--	DrawCircle(myHero.x, myHero.y, myHero.z, AshyMenu.combo.useQrange, TARGB(AshyMenu.draw.qColor))
@@ -460,6 +498,10 @@ function OnDraw()
 
 			if AshyMenu.draw.rKsRange then
 				DrawCircle(myHero.x, myHero.y, myHero.z, AshyMenu.ks.ksRrange, TARGB(AshyMenu.draw.rColor))
+			end
+
+			if AshyMenu.draw.rInterruptRange then
+				DrawCircle(myHero.x, myHero.y, myHero.z, AshyMenu.interrupt.interruptRange, TARGB(AshyMenu.draw.rInterColor))
 			end
 		end
 	end
@@ -527,7 +569,7 @@ function OnProcessSpell(unit, spell)
 	if #InterruptGame > 0 and Spell.R.Ready then
 		for i, v in pairs(InterruptGame) do
 			if (spell.name == v.hechizo) and (unit.team ~= myHero.team) and AshyMenu.interrupt[v.hechizo] then
-				if GetDistance(unit) < 1000 then
+				if GetDistance(unit) < AshyMenu.interrupt.interruptRange then
 					CastSpell(_R, unit.x, unit.z)
 				end
 			end

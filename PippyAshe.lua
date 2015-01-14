@@ -2,7 +2,7 @@
 by
 DaPipex]]
 
-local version = "1.1"
+local version = "1.11"
 
 local DaPipexAsheUpdate = true
 local UPDATE_HOST = "raw.github.com"
@@ -153,7 +153,6 @@ function AsheVars()
 		{ nombre = "Malzahar"    , hechizo = "AlZaharNetherGrasp"},
 		{ nombre = "MissFortune" , hechizo = "MissFortuneBulletTime"},
 		{ nombre = "Nunu"        , hechizo = "AbsoluteZero"},
-		{ nombre = "Pantheon"    , hechizo = "Pantheon_GrandSkyfall_Jump"},
 		{ nombre = "Shen"        , hechizo = "ShenStandUnited"},
 		{ nombre = "Urgot"       , hechizo = "UrgotSwap2"},
 		{ nombre = "Varus"       , hechizo = "VarusQ"},
@@ -213,11 +212,11 @@ function AsheMenu()
 	AshyMenu.hc:addParam("rHelper", "R - Helper", SCRIPT_PARAM_LIST, 2, { "Low", "High" })
 
 	AshyMenu:addSubMenu("Interrupter Settings", "interrupt")
+	AshyMenu.interrupt:addParam("interruptRange", "Interrupt Range", SCRIPT_PARAM_SLICE, 1000, 1, 1500, 0)
 	if #InterruptGame > 0 then
-		AshyMenu.interrupt:addParam("interruptRange", "Interrupt Range", SCRIPT_PARAM_SLICE, 1000, 1, 1500, 0)
 		AshyMenu.interrupt:addParam("info8", "", SCRIPT_PARAM_INFO, "")
 		for i, v in pairs(InterruptGame) do
-			AshyMenu.interrupt:addParam(v.hechizo, v.nombre.." - "..v.hechizo, SCRIPT_PARAM_ONOFF, true)
+			AshyMenu.interrupt:addParam(v.hechizo, v.nombre.."-"..v.hechizo, SCRIPT_PARAM_ONOFF, true)
 		end
 	else
 		AshyMenu.interrupt:addParam("info1", "No supported spells found", SCRIPT_PARAM_INFO, "")
